@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="assets/readme/workflow.svg" alt="call-agy Architecture and Task Delegation Flow" width="100%">
+  <img src="assets/readme/hero.svg" alt="call-agy lets you delegate a task to agy-cli directly from your Agent chat" width="100%">
 </p>
 
 ---
@@ -31,6 +31,10 @@
 ## How It Works
 
 `call-agy` implements an Agent-to-Agent collaboration lifecycle:
+
+<p align="center">
+  <img src="assets/readme/workflow.svg" alt="call-agy architecture and task delegation flow" width="100%">
+</p>
 
 1. **Host Orchestration & Model Selection**: The host AI Agent (e.g., Codex or DeepSeek Harness) formulates a bounded task or model-exploration run, setting parameters such as target model (`--model`), completion criteria, workspace boundaries, and optional priority files (`--file`).
 2. **CLI Bridge**: `call_agy.py` normalizes paths and executes `agy --print= --input-format stream-json --output-format stream-json`, sending the assembled prompt through stdin.

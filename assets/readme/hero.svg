@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">call-agy — delegate to Antigravity CLI from your chat</title>
+  <desc id="desc">A minimal host agent chat interface shows a slash /call-agy command being dispatched directly to the official Google Antigravity CLI.</desc>
+
+  <defs>
+    <!-- Background Canvas Gradient -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B0D14"/>
+      <stop offset="45%" stop-color="#0E121E"/>
+      <stop offset="100%" stop-color="#07080D"/>
+    </linearGradient>
+
+    <!-- Radial Glows for Ambience -->
+    <radialGradient id="glow-right" cx="76%" cy="46%" r="52%">
+      <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.18"/>
+      <stop offset="50%" stop-color="#38BDF8" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow-left" cx="16%" cy="26%" r="46%">
+      <stop offset="0%" stop-color="#6366F1" stop-opacity="0.13"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Chat Card Gradients -->
+    <linearGradient id="card-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#161924"/>
+      <stop offset="100%" stop-color="#10121A"/>
+    </linearGradient>
+
+    <linearGradient id="input-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1C202E"/>
+      <stop offset="100%" stop-color="#131620"/>
+    </linearGradient>
+
+    <!-- Accent Bars -->
+    <linearGradient id="accent-bar" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#A78BFA"/>
+      <stop offset="100%" stop-color="#6366F1"/>
+    </linearGradient>
+
+    <!-- Title Gradient -->
+    <linearGradient id="title-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E2E8F0"/>
+    </linearGradient>
+
+    <!-- Subtle Tech Grid -->
+    <pattern id="subtle-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1D2232" stroke-width="0.75" opacity="0.4"/>
+    </pattern>
+  </defs>
+
+  <!-- Canvas Outer Container -->
+  <rect x="1" y="1" width="1198" height="358" rx="24" fill="url(#bg-grad)" stroke="#24293A" stroke-width="1.5"/>
+  <rect x="1" y="1" width="1198" height="358" rx="24" fill="url(#subtle-grid)"/>
+  <rect x="1" y="1" width="1198" height="358" rx="24" fill="url(#glow-right)"/>
+  <rect x="1" y="1" width="1198" height="358" rx="24" fill="url(#glow-left)"/>
+
+  <!-- Top Edge Subtle Highlight -->
+  <path d="M 28 1 L 1172 1" stroke="#3D465E" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
+
+  <!-- ==================== LEFT COLUMN: Brand & Proposition ==================== -->
+  <g id="brand-block" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+    <!-- Eyebrow Badge -->
+    <g transform="translate(60, 46)">
+      <rect width="272" height="32" rx="16" fill="#141722" stroke="#2B3144" stroke-width="1"/>
+      <path d="M18 10 L12 16 L18 22" fill="none" stroke="#A78BFA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M23 22 L29 10" fill="none" stroke="#A78BFA" stroke-width="2" stroke-linecap="round"/>
+      <text x="38" y="21" fill="#CBD5E1" font-size="12" font-weight="700" letter-spacing="1.2">AGENT SKILL · ANTIGRAVITY CLI</text>
+    </g>
+
+    <!-- Main Title -->
+    <text x="60" y="150" fill="url(#title-grad)" font-size="68" font-weight="800" letter-spacing="-2.5">call-agy</text>
+
+    <!-- Headline (Antigravity CLI clearly displayed) -->
+    <text x="60" y="206" fill="#F8FAFC" font-size="33" font-weight="650" letter-spacing="-0.3">Delegate to Antigravity CLI.</text>
+    <!-- Subheadline -->
+    <text x="60" y="248" fill="#94A3B8" font-size="24" font-weight="450">Without leaving your agent chat.</text>
+
+    <!-- Bottom Feature / Status Line -->
+    <g transform="translate(60, 294)">
+      <circle cx="7" cy="8" r="4.5" fill="#34D399"/>
+      <circle cx="7" cy="8" r="8" fill="#34D399" opacity="0.25"/>
+      <g font-size="13" font-weight="600">
+        <text x="24" y="12.5" fill="#94A3B8" letter-spacing="0.5">
+          <tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">TYPE</tspan>
+          <tspan font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" fill="#C084FC"> /call-agy</tspan>
+          <tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"> · ZERO API KEYS · STREAM-JSON</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ==================== RIGHT COLUMN: Host Agent Chat Mockup ==================== -->
+  <g id="chat-window" transform="translate(596, 36)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+    <!-- Window Frame -->
+    <rect width="544" height="288" rx="20" fill="url(#card-bg)" stroke="#2B3144" stroke-width="1.5"/>
+    <path d="M 20 1 L 524 1" stroke="#3C465E" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+
+    <!-- Window Header -->
+    <path d="M 0 46 H 544" stroke="#202434" stroke-width="1.5"/>
+    
+    <!-- Window Dots -->
+    <circle cx="24" cy="23" r="5" fill="#FF5F56"/>
+    <circle cx="41" cy="23" r="5" fill="#FFBD2E"/>
+    <circle cx="58" cy="23" r="5" fill="#27C93F"/>
+
+    <!-- Header Title -->
+    <text x="80" y="28" fill="#94A3B8" font-size="13" font-weight="650" letter-spacing="0.8">HOST AGENT · CHAT</text>
+    
+    <!-- Header Right Tag -->
+    <g transform="translate(432, 11)">
+      <rect width="90" height="24" rx="12" fill="#181C2A" stroke="#2C3347" stroke-width="1"/>
+      <text x="45" y="16" text-anchor="middle" fill="#A78BFA" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="10.5" font-weight="700">SUB-AGENT</text>
+    </g>
+
+    <!-- Chat Prompt Box -->
+    <g transform="translate(24, 66)">
+      <rect width="496" height="118" rx="14" fill="url(#input-bg)" stroke="#2E3447" stroke-width="1.2"/>
+      <!-- Left Purple Accent Line -->
+      <rect x="0" y="0" width="4.5" height="118" rx="2" fill="url(#accent-bar)"/>
+      
+      <!-- Command Text -->
+      <text x="22" y="40" fill="#C084FC" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="22" font-weight="750">/call-agy</text>
+      <!-- Task Message -->
+      <text x="22" y="74" fill="#F1F5F9" font-size="18" font-weight="520">Review this diff and run the test suite</text>
+      
+      <!-- Option Badges -->
+      <g transform="translate(22, 88)">
+        <g transform="translate(0, 0)">
+          <rect width="124" height="20" rx="6" fill="#121520" stroke="#292F42" stroke-width="1"/>
+          <text x="62" y="14" text-anchor="middle" fill="#8E9BB5" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11.5" font-weight="600">--workspace .</text>
+        </g>
+        <g transform="translate(132, 0)">
+          <rect width="168" height="20" rx="6" fill="#121520" stroke="#292F42" stroke-width="1"/>
+          <text x="84" y="14" text-anchor="middle" fill="#8E9BB5" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11.5" font-weight="600">--mode accept-edits</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- Bottom Delegation Flowbar (No overflow + clear Antigravity CLI) -->
+    <g transform="translate(24, 202)">
+      <!-- Left Pill: Router & Target Destination -->
+      <g transform="translate(0, 0)">
+        <rect width="326" height="44" rx="12" fill="#161925" stroke="#2B3145" stroke-width="1"/>
+        <text x="18" y="27" fill="#C084FC" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="14.5" font-weight="700">call-agy</text>
+        
+        <!-- Connection Flow Arrow -->
+        <g transform="translate(100, 14)">
+          <line x1="2" y1="8" x2="30" y2="8" stroke="#64748B" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M26 3 L31 8 L26 13" fill="none" stroke="#64748B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+        
+        <!-- Target: Antigravity CLI -->
+        <text x="146" y="27" fill="#38BDF8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14.5" font-weight="700">Antigravity CLI</text>
+      </g>
+
+      <!-- Right Pill: Dispatched Status -->
+      <g transform="translate(338, 0)">
+        <rect width="158" height="44" rx="12" fill="#0C2218" stroke="#174B32" stroke-width="1.2"/>
+        <!-- Pulsing Status Dot -->
+        <circle cx="22" cy="22" r="5" fill="#34D399"/>
+        <circle cx="22" cy="22" r="8" fill="#34D399" opacity="0.22"/>
+        <text x="38" y="27" fill="#6EE7B7" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13.5" font-weight="750" letter-spacing="0.6">DISPATCHED</text>
+      </g>
+    </g>
+  </g>
+</svg>

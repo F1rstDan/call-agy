@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="assets/readme/workflow-zh-cn.svg" alt="call-agy 架构与任务委托流程" width="100%">
+  <img src="assets/readme/hero-zh-cn.svg" alt="call-agy 让你在 Agent 对话中直接把任务派给 agy-cli" width="100%">
 </p>
 
 ---
@@ -31,6 +31,10 @@
 ## 工作机制
 
 `call-agy` 实现了严谨的 Agent 间协作生命周期：
+
+<p align="center">
+  <img src="assets/readme/workflow-zh-cn.svg" alt="call-agy 架构与任务委托流程" width="100%">
+</p>
 
 1. **宿主编排与模型探索**：调度 AI Agent（如 Codex、DeepSeek Harness）明确任务目标、模型选择（`--model`）、验收标准与工作区边界，并提供可选的优先级参考文件（`--file`）。
 2. **协议桥接**：`call_agy.py` 标准化路径参数并执行 `agy --print= --input-format stream-json --output-format stream-json`，通过 stdin 发送组装后的提示词。
