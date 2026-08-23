@@ -53,7 +53,7 @@ When the wrapper exits non-zero or reports a non-`SUCCESS` status:
 4. Retry the same delegated task once.
 5. If the corrected retry fails or needs new authority, stop and ask the user rather than completing the original task in the host Agent.
 
-If the launcher prints no `output_path`, inspect its classified stderr first. Handle `AGY_NOT_FOUND`, `AUTH_REQUIRED`, or `AGY_VERSION_UNSUPPORTED` using the actions below; otherwise correct the native shell invocation before diagnosing `agy`. On Windows, use one PowerShell process and invoke `call_agy.ps1` directly with `&`.
+If the launcher prints no `output_path`, inspect its classified stderr first. Handle `AGY_NOT_FOUND`, `AUTH_REQUIRED`, `HOST_SANDBOX_BLOCKED`, or `AGY_VERSION_UNSUPPORTED` using the actions below; otherwise correct the native shell invocation before diagnosing `agy`. On Windows, use one PowerShell process and invoke `call_agy.ps1` directly with `&`.
 
 The wrapper automatically performs its one retry only for the narrow opaque pre-model signature: `ERROR`, empty response, zero token usage, and no tool step. It preserves the task and all settings. When stdout or the handoff reports `attempts=2`, the retry budget is spent; do not launch a third attempt. Permission failures, tool-started failures, resumed conversations, and specific diagnostics are never auto-retried.
 
@@ -61,17 +61,19 @@ The wrapper automatically performs its one retry only for the narrow opaque pre-
 
 The wrapper reports these onboarding failures:
 
-- `AGY_NOT_FOUND`: show the command for the current system, ask the user to open a new terminal, then retry.
+- `AGY_NOT_FOUND`: the wrapper already checked `PATH` and the official default install location. A sandbox may hide a custom installation; if the user says agy is installed elsewhere, locate it and retry once with `--agy-binary <absolute-path>`. Install only when no local executable exists.
   - Windows PowerShell: `irm https://antigravity.google/cli/install.ps1 | iex`
   - macOS/Linux: `curl -fsSL https://antigravity.google/cli/install.sh | bash`
 - `AUTH_REQUIRED`: ask the user to run `agy` in a terminal to sign in, then retry.
+- `HOST_SANDBOX_BLOCKED`: agy was found and started, but the host sandbox denied its state directory under `~/.gemini/antigravity-cli`. Request host-level access to that directory and retry the same task. Antigravity's `--sandbox` and `--dangerously-skip-permissions` do not override the host sandbox.
 - `AGY_VERSION_UNSUPPORTED`: run `agy update` or reinstall the current CLI; call-agy requires `agy 1.1.15+`.
 
 | Failure | Safe correction |
 |---|---|
-| `AGY_NOT_FOUND` | Use the current-platform command above; if already installed, correct PATH or use `--agy-binary`. |
+| `AGY_NOT_FOUND` | Retry a custom installation by absolute `--agy-binary` path; use the install command only when no executable exists. |
 | `AGY_VERSION_UNSUPPORTED` | Run `agy update` or reinstall; structured stdin requires `1.1.15+`. |
 | `AUTH_REQUIRED` | Run `agy` in a terminal to sign in, then retry. |
+| `HOST_SANDBOX_BLOCKED` | Request host-level access to `~/.gemini/antigravity-cli`, then retry the same task. |
 | External file inaccessible | Add the containing directory with `--add-dir`. |
 | Unknown pinned model/agent | Inspect `agy models` / `agy agents`; do not substitute. |
 | Stale conversation | Retry fresh without `--conversation`. |

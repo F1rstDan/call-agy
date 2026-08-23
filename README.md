@@ -208,8 +208,9 @@ Let Antigravity implement and verify the fix as a sub-agent, then review its han
 If delegation fails (non-zero exit or non-`SUCCESS` status):
 
 1. **Diagnose**: Inspect stderr and the Markdown error block.
-   - `AGY_NOT_FOUND` -> Run the current-system installation command included in the error, open a new terminal, and retry.
+   - `AGY_NOT_FOUND` -> The wrapper already checked `PATH` and the official default install location. If agy is installed elsewhere, retry with its absolute `--agy-binary` path; install only when no local executable exists.
    - `AUTH_REQUIRED` -> Run `agy` in a terminal to sign in, then retry.
+   - `HOST_SANDBOX_BLOCKED` -> Request host-level access to `~/.gemini/antigravity-cli`, then retry the same task; changing Antigravity permission flags alone cannot grant that access.
    - `AGY_VERSION_UNSUPPORTED` means the installed CLI rejected required headless flags; run `agy update` or reinstall it.
    - No `output_path` and no classified onboarding error means the wrapper did not finish starting; correct the native shell command before diagnosing `agy`.
 2. **Local Safe Repair**:

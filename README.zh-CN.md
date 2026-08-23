@@ -208,8 +208,9 @@ status=SUCCESS
 当委托执行失败（非零退出码或非 `SUCCESS` 状态）时，宿主 Agent 应执行以下自愈逻辑：
 
 1. **诊断原因**：读取 stderr 与 Markdown 移交报告中的 Error 诊断区块。
-   - `AGY_NOT_FOUND` -> 执行错误中针对当前系统给出的安装命令，打开新终端后重试。
+   - `AGY_NOT_FOUND` -> wrapper 已检查 `PATH` 和官方默认安装位置。如果 agy 安装在其他位置，使用其绝对路径通过 `--agy-binary` 重试；确认本机没有可执行文件后再安装。
    - `AUTH_REQUIRED` -> 在终端运行 `agy` 完成登录，然后重试。
+   - `HOST_SANDBOX_BLOCKED` -> 请求宿主层开放 `~/.gemini/antigravity-cli` 后重试同一任务；仅调整 Antigravity 自身权限参数无法取得该访问权。
    - `AGY_VERSION_UNSUPPORTED` 表示当前 CLI 不支持所需的无头参数；运行 `agy update` 或重新安装。
    - 没有 `output_path` 且没有上述分类错误，才按 wrapper 未完整启动处理，先修正原生 shell 调用。
 2. **本地安全修复**：

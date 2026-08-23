@@ -88,10 +88,11 @@ def install_command() -> str:
 
 def agy_not_found_error(raw: str) -> str:
     return (
-        f"AGY_NOT_FOUND: Antigravity CLI executable '{raw}' was not found.\n"
-        f"Install it for this system:\n  {install_command()}\n"
-        "Open a new terminal after installation, then retry. If agy is already installed, "
-        "correct PATH or pass --agy-binary.\n"
+        f"AGY_NOT_FOUND: Antigravity CLI executable '{raw}' was not found on the current PATH "
+        "or in the official default install location. A sandbox may have an incomplete PATH.\n"
+        "If agy is installed elsewhere, retry with --agy-binary <absolute-path> or set "
+        "CALL_AGY_BINARY. Install only when no local executable exists:\n"
+        f"  {install_command()}\n"
         "Official guide: https://www.agy.dev/docs/cli/getting-started/"
     )
 
@@ -102,6 +103,17 @@ def actionable_failure(text: str) -> str | None:
             "AUTH_REQUIRED: Open a terminal, run `agy`, sign in, then retry call-agy."
         )
     lowered = text.lower()
+    normalized = lowered.replace("\\", "/")
+    if (
+        ".gemini/antigravity-cli" in normalized
+        and ("access is denied" in lowered or "permission denied" in lowered)
+    ):
+        return (
+            "HOST_SANDBOX_BLOCKED: agy started, but the host sandbox denied access to its local "
+            "state under ~/.gemini/antigravity-cli. Request host-level access to that directory "
+            "and retry the same task. Antigravity --sandbox and --dangerously-skip-permissions "
+            "cannot override the host sandbox."
+        )
     if (
         any(pattern in lowered for pattern in UNSUPPORTED_FLAG_PATTERNS)
         and ("input-format" in lowered or "output-format" in lowered or "print-timeout" in lowered)
@@ -124,14 +136,41 @@ def with_actionable_failure(result: dict[str, Any], diagnostics: list[str]) -> d
     return updated
 
 
+def default_agy_candidates() -> list[pathlib.Path]:
+    home = pathlib.Path.home()
+    if os.name == "nt":
+        local_app_data = os.environ.get("LOCALAPPDATA")
+        candidates = []
+        if local_app_data:
+            candidates.append(pathlib.Path(local_app_data) / "agy" / "bin" / "agy.exe")
+        candidates.append(home / "AppData" / "Local" / "agy" / "bin" / "agy.exe")
+    else:
+        candidates = [home / ".local" / "bin" / "agy"]
+    return list(dict.fromkeys(candidates))
+
+
+def discover_default_agy() -> str | None:
+    for path in default_agy_candidates():
+        try:
+            if path.is_file():
+                return str(path.resolve())
+        except OSError:
+            continue
+    return None
+
+
 def resolve_executable(raw: str) -> str:
     candidate = os.path.expandvars(os.path.expanduser(raw))
     if os.path.sep in candidate or (os.path.altsep and os.path.altsep in candidate):
         p = pathlib.Path(candidate)
-        if not p.exists():
+        if not p.is_file():
             raise RuntimeError(agy_not_found_error(raw))
         return str(p.resolve())
     resolved = shutil.which(candidate)
+    if not resolved and candidate.lower() in {"agy", "agy.exe"}:
+        resolved = discover_default_agy()
+        if resolved:
+            eprint(f"[call-agy] agy is not on PATH; using default install location: {resolved}")
     if not resolved:
         raise RuntimeError(agy_not_found_error(raw))
     return resolved

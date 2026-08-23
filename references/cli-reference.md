@@ -4,7 +4,7 @@ Load this reference for setup, non-default flags, multiline or large prompts, se
 
 ## Requirements
 
-- Official Antigravity CLI `1.1.15+` available as `agy`, or supplied with `--agy-binary`.
+- Official Antigravity CLI `1.1.15+`. The wrapper checks `PATH`, then the official default location (`%LOCALAPPDATA%/agy/bin/agy.exe` on Windows or `~/.local/bin/agy` on macOS/Linux); use `--agy-binary` for a custom location.
 - One prior interactive `agy` login. Headless mode uses locally cached credentials; this Skill does not need an API key.
 - Python 3.10+ for `scripts/call_agy.py`.
 - A host Agent that can read `SKILL.md` and run a local process.
