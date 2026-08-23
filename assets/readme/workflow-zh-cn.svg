@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 370" width="940" height="370" role="img" aria-labelledby="title desc">
+  <title>call-agy 架构与任务委托流程</title>
+  <desc>展示调度 AI Agent 如何通过 call-agy 将有明确边界的任务委托给本地官方 Google Antigravity CLI（无头模式），并获取结构化 Markdown 移交报告与可恢复会话 ID 的架构流程图。</desc>
+  <defs>
+    <linearGradient id="bgGradZh" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d1117" />
+      <stop offset="100%" stop-color="#161b22" />
+    </linearGradient>
+    <linearGradient id="cardGradZh" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1f242c" />
+      <stop offset="100%" stop-color="#161b22" />
+    </linearGradient>
+    <linearGradient id="blueGradZh" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#58a6ff" />
+      <stop offset="100%" stop-color="#79c0ff" />
+    </linearGradient>
+    <linearGradient id="purpleGradZh" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#bc8cff" />
+      <stop offset="100%" stop-color="#d2a8ff" />
+    </linearGradient>
+    <linearGradient id="greenGradZh" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3fb950" />
+      <stop offset="100%" stop-color="#56d364" />
+    </linearGradient>
+    <linearGradient id="orangeGradZh" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f0883e" />
+      <stop offset="100%" stop-color="#ffa657" />
+    </linearGradient>
+    <filter id="shadowZh" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.4" />
+    </filter>
+    <marker id="arrowZh" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#8b949e" />
+    </marker>
+    <marker id="arrowBlueZh" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#58a6ff" />
+    </marker>
+    <marker id="arrowGreenZh" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#3fb950" />
+    </marker>
+  </defs>
+
+  <style>
+    .title-text-zh { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 13px; fill: #8b949e; font-weight: 500; }
+    .card-title-zh { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 14px; font-weight: 600; }
+    .card-role-zh { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 11px; fill: #8b949e; }
+    .card-body-zh { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 12px; fill: #c9d1d9; line-height: 1.4; }
+    .code-text-zh { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 11px; fill: #79c0ff; }
+    .badge-text-zh { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 10px; font-weight: 600; }
+    .footer-text-zh { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 12px; fill: #8b949e; }
+  </style>
+
+  <!-- Container Frame -->
+  <rect x="2" y="2" width="936" height="366" rx="12" fill="url(#bgGradZh)" stroke="#30363d" stroke-width="1.5" />
+
+  <!-- Terminal Window Header -->
+  <path d="M 2 14 Q 2 2 14 2 L 926 2 Q 938 2 938 14 L 938 38 L 2 38 Z" fill="#161b22" />
+  <line x1="2" y1="38" x2="938" y2="38" stroke="#30363d" stroke-width="1" />
+  <circle cx="20" cy="20" r="5" fill="#f85149" />
+  <circle cx="36" cy="20" r="5" fill="#e3b341" />
+  <circle cx="52" cy="20" r="5" fill="#3fb950" />
+  <text x="75" y="24" class="title-text-zh">call-agy :: Agent 间任务委托与协作生命周期</text>
+
+  <!-- STEP 1: Calling Agent -->
+  <g filter="url(#shadowZh)">
+    <rect x="24" y="58" width="195" height="230" rx="8" fill="url(#cardGradZh)" stroke="#30363d" stroke-width="1.2" />
+    <rect x="24" y="58" width="195" height="4" rx="2" fill="url(#blueGradZh)" />
+    
+    <text x="40" y="85" fill="#58a6ff" class="card-title-zh">1. 调度 Agent</text>
+    <text x="40" y="103" class="card-role-zh">HOST ORCHESTRATOR</text>
+    <line x1="40" y1="113" x2="203" y2="113" stroke="#30363d" stroke-width="1" />
+    
+    <text x="40" y="135" class="card-body-zh">构建有界任务请求：</text>
+    <text x="40" y="153" class="code-text-zh">• 明确具体目标</text>
+    <text x="40" y="171" class="code-text-zh">• 设定验收交付标准</text>
+    <text x="40" y="189" class="code-text-zh">• 指定优先级 --file 路径</text>
+    <text x="40" y="207" class="code-text-zh">• 划定工作区与安全边界</text>
+
+    <rect x="40" y="235" width="163" height="36" rx="6" fill="#0d1117" stroke="#30363d" />
+    <text x="48" y="257" fill="#8b949e" class="badge-text-zh">状态: 任务委托中</text>
+  </g>
+
+  <!-- Connector 1 -> 2 -->
+  <path d="M 219 173 L 253 173" stroke="#58a6ff" stroke-width="1.8" marker-end="url(#arrowBlueZh)" />
+
+  <!-- STEP 2: call-agy Wrapper -->
+  <g filter="url(#shadowZh)">
+    <rect x="257" y="58" width="195" height="230" rx="8" fill="url(#cardGradZh)" stroke="#30363d" stroke-width="1.2" />
+    <rect x="257" y="58" width="195" height="4" rx="2" fill="url(#purpleGradZh)" />
+
+    <text x="273" y="85" fill="#bc8cff" class="card-title-zh">2. call-agy 包装器</text>
+    <text x="273" y="103" class="card-role-zh">CLI PROTOCOL BRIDGE</text>
+    <line x1="273" y1="113" x2="436" y2="113" stroke="#30363d" stroke-width="1" />
+
+    <text x="273" y="135" class="card-body-zh">调度执行与安全控制：</text>
+    <text x="273" y="153" class="code-text-zh">• 零 Token/凭据泄露</text>
+    <text x="273" y="171" class="code-text-zh">• 原生跨平台脚本支持</text>
+    <text x="273" y="189" class="code-text-zh">• --mode accept-edits</text>
+    <text x="273" y="207" class="code-text-zh">• 流式解析 stream-json</text>
+
+    <rect x="273" y="235" width="163" height="36" rx="6" fill="#0d1117" stroke="#30363d" />
+    <text x="281" y="257" fill="#bc8cff" class="badge-text-zh">官方无头 CLI 接口</text>
+  </g>
+
+  <!-- Connector 2 -> 3 -->
+  <path d="M 452 173 L 486 173" stroke="#bc8cff" stroke-width="1.8" marker-end="url(#arrowZh)" />
+
+  <!-- STEP 3: Official Antigravity CLI -->
+  <g filter="url(#shadowZh)">
+    <rect x="490" y="58" width="195" height="230" rx="8" fill="url(#cardGradZh)" stroke="#30363d" stroke-width="1.2" />
+    <rect x="490" y="58" width="195" height="4" rx="2" fill="url(#greenGradZh)" />
+
+    <text x="506" y="85" fill="#3fb950" class="card-title-zh">3. Antigravity CLI</text>
+    <text x="506" y="103" class="card-role-zh">OFFICIAL agy ENGINE</text>
+    <line x1="506" y1="113" x2="669" y2="113" stroke="#30363d" stroke-width="1" />
+
+    <text x="506" y="135" class="card-body-zh">自主执行与本地验证：</text>
+    <text x="506" y="153" class="code-text-zh">• 代码库深度探索</text>
+    <text x="506" y="171" class="code-text-zh">• 独立实现与排错</text>
+    <text x="506" y="189" class="code-text-zh">• 运行测试与语法检查</text>
+    <text x="506" y="207" class="code-text-zh">• 遵循本地权限策略</text>
+
+    <rect x="506" y="235" width="163" height="36" rx="6" fill="#0d1117" stroke="#30363d" />
+    <text x="514" y="257" fill="#3fb950" class="badge-text-zh">状态: 执行完成</text>
+  </g>
+
+  <!-- Connector 3 -> 4 -->
+  <path d="M 685 173 L 719 173" stroke="#3fb950" stroke-width="1.8" marker-end="url(#arrowGreenZh)" />
+
+  <!-- STEP 4: Markdown Handoff -->
+  <g filter="url(#shadowZh)">
+    <rect x="723" y="58" width="195" height="230" rx="8" fill="url(#cardGradZh)" stroke="#30363d" stroke-width="1.2" />
+    <rect x="723" y="58" width="195" height="4" rx="2" fill="url(#orangeGradZh)" />
+
+    <text x="739" y="85" fill="#f0883e" class="card-title-zh">4. Markdown 移交报告</text>
+    <text x="739" y="103" class="card-role-zh">STRUCTURED RESULT</text>
+    <line x1="739" y1="113" x2="902" y2="113" stroke="#30363d" stroke-width="1" />
+
+    <text x="739" y="135" class="card-body-zh">紧凑产物交付与审查：</text>
+    <text x="739" y="153" class="code-text-zh">• 最终响应与 Diff 变更</text>
+    <text x="739" y="171" class="code-text-zh">• conversation_id</text>
+    <text x="739" y="189" class="code-text-zh">• 工具统计与 Token 开销</text>
+    <text x="739" y="207" class="code-text-zh">• 宿主 Agent 独立审查</text>
+
+    <rect x="739" y="235" width="163" height="36" rx="6" fill="#0d1117" stroke="#30363d" />
+    <text x="747" y="257" fill="#f0883e" class="badge-text-zh">支持会话恢复</text>
+  </g>
+
+  <!-- Bottom Return Loop / Footer Note -->
+  <g>
+    <path d="M 820 295 L 820 320 L 121 320 L 121 295" fill="none" stroke="#30363d" stroke-width="1.2" stroke-dasharray="4 4" />
+    <rect x="270" y="308" width="400" height="24" rx="12" fill="#161b22" stroke="#30363d" stroke-width="1" />
+    <text x="290" y="324" class="footer-text-zh">支持无缝多轮接续: <tspan class="code-text-zh" fill="#58a6ff">--conversation &lt;id&gt;</tspan></text>
+  </g>
+</svg>

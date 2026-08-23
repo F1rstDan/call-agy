@@ -1,0 +1,5 @@
+call-agy is an unofficial interoperability Skill and is not affiliated with or endorsed by Google.
+
+Google Antigravity and related names are trademarks of their respective owners.
+This project invokes the user's locally installed official `agy` CLI through its documented command-line interface.
+No Google logos or proprietary assets are included.

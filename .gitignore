@@ -1,0 +1,16 @@
+.runtime/
+__pycache__/
+*.pyc
+
+# Local development evidence and tooling
+/evals/
+/tests/
+/reports/
+/scripts/evaluate_instruction_contract.py
+/scripts/trigger_eval.py
+/scripts/validate_skill.py
+/agents/interface.yaml
+/manifest.json
+
+# Manual prompt scratch files
+/_agy_task*.txt

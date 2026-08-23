@@ -1,0 +1,4 @@
+interface:
+  display_name: "call-agy"
+  short_description: "Delegate a bounded task to the official local Antigravity CLI"
+  default_prompt: "Use $call-agy to delegate this bounded task to the local Antigravity CLI, then verify its handoff and any workspace changes."
