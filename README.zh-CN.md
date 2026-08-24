@@ -12,6 +12,12 @@
   <img src="assets/readme/hero-zh-cn.svg" alt="call-agy — 在 Agent 对话中一键把任务派发给官方 Antigravity CLI" width="100%">
 </p>
 
+<p align="center">
+  <a href="https://github.com/F1rstDan/call-agy/releases"><img src="https://img.shields.io/github/v/release/F1rstDan/call-agy?style=flat-square&color=blue" alt="GitHub Release"></a>
+  <a href="https://github.com/F1rstDan/call-agy/blob/main/LICENSE"><img src="https://img.shields.io/github/license/F1rstDan/call-agy?style=flat-square" alt="License"></a>
+  <a href="https://github.com/F1rstDan/call-agy/commits/main"><img src="https://img.shields.io/github/last-commit/F1rstDan/call-agy?style=flat-square" alt="Last Commit"></a>
+</p>
+
 ---
 
 ## 核心特性
@@ -54,28 +60,30 @@
 
 ## 安装与配置
 
-将 `call-agy` 仓库放置或链接到宿主 Agent 扫描的 Skill 目录中：
+### 方式一：使用 `npx skills` 一键安装（推荐）
 
 ```bash
-# 注册到包管理器后的安装方式（可选）：
-# npx skills add <repository-url> --skill call-agy
+npx skills add F1rstDan/call-agy
 ```
 
-### POSIX (macOS / Linux)
+更新：
+```bash
+npx skills update call-agy
+```
+
+### 方式二：使用 `git clone` 手动安装
 
 ```bash
-export AGENT_SKILLS_DIR="/path/to/your/agent/skills"
-mkdir -p "$AGENT_SKILLS_DIR"
-ln -s "/absolute/path/to/call-agy" "$AGENT_SKILLS_DIR/call-agy"
+# macOS / Linux
+git clone https://github.com/F1rstDan/call-agy.git ~/.agents/skills/call-agy
+
+# Windows (PowerShell)
+git clone https://github.com/F1rstDan/call-agy.git "$env:USERPROFILE\.agents\skills\call-agy"
 ```
 
-### Windows (PowerShell)
-
-```powershell
-$SkillsDir = "$env:USERPROFILE\.gemini\skills"
-$Repo = "C:\path\to\call-agy"
-New-Item -ItemType Directory -Force -Path $SkillsDir
-New-Item -ItemType Junction -Path "$SkillsDir\call-agy" -Target $Repo
+更新：
+```bash
+git -C ~/.agents/skills/call-agy pull
 ```
 
 ---
@@ -157,7 +165,7 @@ status=SUCCESS
 
 ## 典型 Agent 提示词示例
 
-**你可以直接这样说 / You can say:**
+**你可以直接这样说:**
 
 在向宿主 Agent 发出指令时（例如体验新模型或委托独立子任务），可采用如下提示词模式：
 

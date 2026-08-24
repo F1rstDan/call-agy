@@ -12,6 +12,12 @@
   <img src="assets/readme/hero.svg" alt="call-agy — delegate bounded tasks to the official Antigravity CLI from your Agent chat" width="100%">
 </p>
 
+<p align="center">
+  <a href="https://github.com/F1rstDan/call-agy/releases"><img src="https://img.shields.io/github/v/release/F1rstDan/call-agy?style=flat-square&color=blue" alt="GitHub Release"></a>
+  <a href="https://github.com/F1rstDan/call-agy/blob/main/LICENSE"><img src="https://img.shields.io/github/license/F1rstDan/call-agy?style=flat-square" alt="License"></a>
+  <a href="https://github.com/F1rstDan/call-agy/commits/main"><img src="https://img.shields.io/github/last-commit/F1rstDan/call-agy?style=flat-square" alt="Last Commit"></a>
+</p>
+
 ---
 
 ## Key Highlights
@@ -54,28 +60,30 @@
 
 ## Installation & Setup
 
-Link or copy the `call-agy` directory into your host Agent's active Skill directory:
+### Option 1: `npx skills` (Recommended)
 
 ```bash
-# Optional package manager install (when published to registry):
-# npx skills add <repository-url> --skill call-agy
+npx skills add F1rstDan/call-agy
 ```
 
-### POSIX (macOS / Linux)
+Update:
+```bash
+npx skills update call-agy
+```
+
+### Option 2: `git clone`
 
 ```bash
-export AGENT_SKILLS_DIR="/path/to/your/agent/skills"
-mkdir -p "$AGENT_SKILLS_DIR"
-ln -s "/absolute/path/to/call-agy" "$AGENT_SKILLS_DIR/call-agy"
+# macOS / Linux
+git clone https://github.com/F1rstDan/call-agy.git ~/.agents/skills/call-agy
+
+# Windows (PowerShell)
+git clone https://github.com/F1rstDan/call-agy.git "$env:USERPROFILE\.agents\skills\call-agy"
 ```
 
-### Windows (PowerShell)
-
-```powershell
-$SkillsDir = "$env:USERPROFILE\.gemini\skills"
-$Repo = "C:\path\to\call-agy"
-New-Item -ItemType Directory -Force -Path $SkillsDir
-New-Item -ItemType Junction -Path "$SkillsDir\call-agy" -Target $Repo
+Update:
+```bash
+git -C ~/.agents/skills/call-agy pull
 ```
 
 ---
@@ -157,7 +165,7 @@ To continue a previous Antigravity session with full historical context, supply 
 
 ## Typical Agent Prompt Pattern
 
-**You can say / 你可以直接这样说:**
+**You can say:**
 
 When prompting your host Agent to delegate a task to Antigravity:
 
