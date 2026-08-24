@@ -89,7 +89,9 @@ Never guess a slug or replace an unavailable pinned model without the user's dir
 | `--model <slug>` | Explicit model from `agy models`. |
 | `--effort <low|medium|high>` | Explicit reasoning effort. |
 | `--agent <name>` | Explicit agent from `agy agents`. |
-| `--timeout <duration>` | Print timeout such as `10m` or `90s`; wrapper default `10m`. |
+| `--timeout <duration>` | Native AGY total print-timeout ceiling; default `2h`. |
+| `--idle-timeout <duration>` | Warn after this long without a valid `init` or `step_update`; default `10m`. |
+| `--idle-grace <duration>` | Terminate if valid stream activity does not resume during this grace; default `5m`. |
 | `--wrapper-timeout <duration>` | Hard process watchdog; defaults to `--timeout` plus 30 seconds and must be greater than `--timeout`. |
 | `--mode <accept-edits|plan>` | Antigravity execution mode. |
 | `--sandbox` | Enable terminal sandbox restrictions. |
@@ -107,5 +109,7 @@ Task text may be the first positional argument, `--task`, or stdin. It is sent t
 The standard Markdown handoff includes the complete assembled prompt delegated to Antigravity, the final or recovered partial response, effective conversation ID, native and wrapper status, process exit code, explicitly selected model/effort when available, requested agent override, compact tool counts, AGY-reported usage, and elapsed time. Usage and duration counters may be cumulative on resumed conversations; do not add cache reads to totals or infer billing. If the wrapper performs its narrow automatic pre-model retry, it records each attempt boundary and the previous conversation ID.
 
 Every non-dry run first prints `receipt_path` for a best-effort atomically updated crash/interruption receipt, then prints the final `conversation_id`, `output_path`, `elapsed`, and `status` when finalization completes. It may additionally report `attempts=2`, `prompt_file_path`, `raw_output_path`, or `recovery_conversation_id`. A timeout/incomplete result includes a suggested resume prompt but never starts that extra model turn automatically. Without `--output`, turns from the same conversation share `%TEMP%/call-agy/<conversation-id>/` and use unique `<turn-id>-handoff.md` filenames. Artifacts without a conversation ID remain directly under `%TEMP%/call-agy/`; `conversation_id`, not a temporary file, is the resume handle.
+
+The wrapper consumes AGY events continuously. Valid `init` and `step_update` events renew the activity deadline; stderr and malformed output do not. Key progress is emitted as compact stderr lines and persisted in the receipt. Partial-response progress is limited to once per 60 seconds and contains the cumulative character count, timestamp, and a 20-character single-line tail. This is observation for host-Agent judgment, not automatic repetition detection. A valid terminal `result` ends stream consumption; AGY receives 5 seconds to exit before bounded process-tree cleanup.
 
 When explicit `--output` or `--raw-output` already exists, call-agy preserves it and selects a unique suffixed filename. Pass `--force` only when replacement is intentional. The two options must not resolve to the same file. Wrapper-created output files are independent of AGY `--mode plan`; plan governs AGY behavior, not the wrapper's own handoff writes.

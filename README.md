@@ -191,7 +191,9 @@ Let Antigravity implement and verify the fix as a sub-agent, then review its han
 | `--model <slug>` | Explicit model override from `agy models` (defaults to CLI configuration). |
 | `--effort <low\|medium\|high>` | Reasoning effort level. |
 | `--agent <name>` | Select built-in or custom agent persona from `agy agents`. |
-| `--timeout <duration>` | Execution timeout, e.g., `10m`, `30m` (default: `10m`). |
+| `--timeout <duration>` | Native AGY total `--print-timeout` ceiling (default: `2h`). |
+| `--idle-timeout <duration>` | Warn after no valid `init`/`step_update` event for this duration (default: `10m`). |
+| `--idle-grace <duration>` | Terminate if stream silence continues after the warning (default: `5m`). |
 | `--wrapper-timeout <duration>` | Hard wrapper watchdog. Defaults to `--timeout` plus 30 seconds, must exceed `--timeout`, and should remain below the host timeout. |
 | `--mode <accept-edits\|plan>` | Execution mode; use `accept-edits` for authorized file modifications. |
 | `--sandbox` | Enforce Antigravity terminal sandbox restrictions. |
@@ -231,7 +233,8 @@ If delegation fails (non-zero exit code or non-`SUCCESS` status):
 2. **Safe Recovery**:
    - External file boundary ➔ Add the parent directory with `--add-dir <path>`.
    - Shell permission soft-denial in safe mode ➔ Configure scoped Antigravity rules or confirm permission changes with the user.
-   - Timeout ➔ Read the partial handoff and suggested same-conversation recovery prompt. Only resume explicitly when another turn merits its Token cost; keep `--wrapper-timeout` above `--timeout` and the host timeout above both.
+   - Idle warning ➔ Observe compact stderr/receipt progress. Any valid stream event renews the activity deadline; after the configured grace, `IDLE_TIMEOUT` preserves partial evidence and terminates the process tree.
+   - Total timeout ➔ Read the partial handoff and suggested same-conversation recovery prompt. Only resume explicitly when another turn merits its Token cost; keep `--wrapper-timeout` above `--timeout` and the host timeout above both.
    - Stale session ➔ Re-run without `--conversation` to start a clean context.
 3. **Single Retry Budget**: The wrapper automatically retries once on transient empty zero-token errors (`attempts=2`). If this occurs, do not launch a third attempt.
 

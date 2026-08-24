@@ -107,6 +107,7 @@ The wrapper reports these onboarding failures:
 | Opaque zero-token error before tools | Let the wrapper retry once unchanged; do not switch model or permission posture. |
 | Non-success terminal status | Preserve status and diagnostics; do not present the task as complete. |
 | `wrapper_status=TIMEOUT` | Read the partial receipt/handoff and its suggested same-conversation recovery prompt. Decide explicitly whether another turn merits its Token cost. |
+| `wrapper_status=IDLE_TIMEOUT` | No valid stream event resumed during the idle grace. Inspect the last event, active tool, partial-response progress, and diagnostics before deciding whether to retry with longer startup limits. |
 | `wrapper_status=NO_TERMINAL_RESULT` | Use the recovered stream text and diagnostics; do not claim a completed response. |
 | `wrapper_status=NO_FINAL_RESPONSE` | Treat the run as failed even if native AGY reported `SUCCESS`. |
 
@@ -116,13 +117,18 @@ zero-turn case reports the original task size, actual transport, and serialized 
 
 ## Timeout Coordination
 
-`--timeout` remains Antigravity's print timeout. The wrapper watchdog defaults to that value
-plus 30 seconds, giving AGY time to emit its terminal result. `--wrapper-timeout` can override
-the hard watchdog but must remain greater than `--timeout`. The host process timeout must exceed
-the wrapper watchdog; `--dry-run` prints a recommended host timeout. On expiry, the wrapper
-terminates the AGY process tree, preserves partial stream text, and writes `wrapper_status=TIMEOUT`.
-It does not automatically spend another turn; when a conversation ID exists, the handoff includes
-a concise recovery prompt for an explicit resume.
+`--timeout` remains Antigravity's total print timeout and defaults to 2 hours. The wrapper consumes
+stream-json continuously; it does not poll for completion. Valid `init` and `step_update` events
+renew activity. After 10 silent minutes by default, the wrapper writes an idle warning to stderr and
+the receipt; after another 5 silent minutes, it terminates the process tree with
+`wrapper_status=IDLE_TIMEOUT`. Hosts may override both values before launch.
+
+The absolute wrapper watchdog defaults to `--timeout` plus 30 seconds. An explicit
+`--wrapper-timeout` must remain greater than `--timeout`, and the host process timeout must exceed
+the wrapper watchdog. A terminal `result` is the completion boundary; AGY receives 5 seconds to
+exit before cleanup, and an already received usable result remains authoritative. Timeout paths
+preserve partial stream text and never automatically spend another turn. When a conversation ID
+exists, the handoff includes a concise recovery prompt for an explicit resume.
 
 ## No Host Takeover on Delegation Failure
 

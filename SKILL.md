@@ -103,10 +103,16 @@ elapsed=<seconds>s
 status=SUCCESS
 ```
 
-Every non-dry run prints `receipt_path=<absolute-markdown-path>` before starting AGY. The
-wrapper hard watchdog defaults to `--timeout` plus 30 seconds; an explicit watchdog must be
-greater than `--timeout`. Configure the host process timeout above that value so the wrapper
-can terminate the AGY process tree and finalize its handoff.
+Every non-dry run prints `receipt_path=<absolute-markdown-path>` before starting AGY. The wrapper
+waits on AGY's stream rather than polling: valid `init` and `step_update` events renew its activity
+deadline. Defaults are a 2-hour AGY total ceiling, an idle warning after 10 minutes, and termination
+after another 5 silent minutes. The host Agent may override these before launch with `--timeout`,
+`--idle-timeout`, and `--idle-grace`. Keep the host process timeout above the wrapper watchdog.
+
+Progress uses compact stderr lines plus the receipt: tool state changes and, at most once per minute,
+partial-response character count, timestamp, and a 20-character tail. Treat these as observation for
+host judgment, not automatic proof of a text loop. A terminal `result` completes the turn; AGY then
+gets 5 seconds to exit before process-tree cleanup.
 
 For the narrow transient failure `ERROR` + empty response + zero token usage + no tool step, the wrapper repeats the same fresh invocation once. It reports `attempts=2`; this consumes the single retry budget, so the host must not launch a third attempt.
 

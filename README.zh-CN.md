@@ -191,7 +191,9 @@ sh ./scripts/call_agy.sh \
 | `--model <slug>` | 显式指定模型 Slug（可从 `agy models` 中获取；默认使用 CLI 全局配置）。 |
 | `--effort <low\|medium\|high>` | 设定模型推理思考强度。 |
 | `--agent <name>` | 指定内置或自定义 Agent 身份（可从 `agy agents` 中获取）。 |
-| `--timeout <duration>` | 运行超时时间，例如 `10m`, `30m`（默认：`10m`）。 |
+| `--timeout <duration>` | AGY 原生 `--print-timeout` 总上限（默认：`2h`）。 |
+| `--idle-timeout <duration>` | 连续未收到有效 `init`/`step_update` 事件多久后告警（默认：`10m`）。 |
+| `--idle-grace <duration>` | 告警后继续静默多久才终止（默认：`5m`）。 |
 | `--wrapper-timeout <duration>` | Wrapper 硬看门狗；默认比 `--timeout` 多 30 秒，必须大于 `--timeout`，并应小于宿主超时。 |
 | `--mode <accept-edits\|plan>` | 执行模式；在明确授权修改代码时请使用 `accept-edits`。 |
 | `--sandbox` | 启用 Antigravity 终端沙箱限制。 |
@@ -231,7 +233,8 @@ sh ./scripts/call_agy.sh \
 2. **安全恢复**：
    - 外部文件边界 ➔ 使用 `--add-dir <path>` 补充目标所在的外部目录。
    - 安全模式下 shell 权限软拒绝 ➔ 配置细粒度 Antigravity 命令规则，或与用户确认是否调整权限。
-   - 超时中断 ➔ 先读取部分交付与同会话恢复建议；只有额外一轮 Token 成本值得时才显式续接。`--wrapper-timeout` 必须大于 `--timeout`，宿主超时再高于两者。
+   - 静默告警 ➔ 观察 stderr 单行进度或本地回执；任何有效流事件都会重新计时，宽限期后仍静默则以 `IDLE_TIMEOUT` 保留部分证据并终止进程树。
+   - 总超时中断 ➔ 先读取部分交付与同会话恢复建议；只有额外一轮 Token 成本值得时才显式续接。`--wrapper-timeout` 必须大于 `--timeout`，宿主超时再高于两者。
    - 会话失效 ➔ 移除 `--conversation` 参数重新开启新会话。
 3. **单次重试额度**：针对由于偶发性空错误导致的零 Token 失败，Wrapper 会自动重试一次（输出 `attempts=2`）；此时请勿发起第三次重试。
 

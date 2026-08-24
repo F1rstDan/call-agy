@@ -28,6 +28,9 @@ from typing import Any, NamedTuple
 STREAM_INPUT_SAFE_BYTES = 60 * 1024
 DEFAULT_WATCHDOG_GRACE_SECONDS = 30.0
 TERMINATION_GRACE_SECONDS = 5.0
+RESULT_EXIT_GRACE_SECONDS = 5.0
+DEFAULT_PROGRESS_REPORT_INTERVAL_SECONDS = 60.0
+PROGRESS_TAIL_CHARS = 20
 MAX_RECEIPT_RESPONSE_CHARS = 64 * 1024
 STDERR_RING_LINES = 200
 MIN_AGY_VERSION = (1, 1, 15)
@@ -395,6 +398,8 @@ class RunReceipt:
         workspace: pathlib.Path,
         mode: str | None,
         watchdog_seconds: float,
+        idle_timeout_seconds: float = 600.0,
+        idle_grace_seconds: float = 300.0,
     ) -> None:
         self.path = path
         self._lock = threading.Lock()
@@ -406,6 +411,8 @@ class RunReceipt:
             "workspace": str(workspace),
             "mode": mode or "default",
             "watchdog_seconds": watchdog_seconds,
+            "idle_timeout_seconds": idle_timeout_seconds,
+            "idle_grace_seconds": idle_grace_seconds,
             "state": "STARTING",
             "conversation_id": "",
             "last_event": "receipt_created",
@@ -463,6 +470,8 @@ class RunReceipt:
             f"- workspace: `{self._data['workspace']}`",
             f"- mode: `{self._data['mode']}`",
             f"- watchdog_seconds: `{self._data['watchdog_seconds']:.1f}`",
+            f"- idle_warning_seconds: `{self._data['idle_timeout_seconds']:.1f}`",
+            f"- idle_grace_seconds: `{self._data['idle_grace_seconds']:.1f}`",
         ]
         if self._data.get("conversation_id"):
             lines.append(f"- conversation_id: `{self._data['conversation_id']}`")
@@ -857,6 +866,7 @@ def normalize_terminal_result(
     return_code: int = 0,
     sent_prompt_bytes: int | None = None,
     prompt_transport: str = "stdin",
+    post_result_cleanup: bool = False,
 ) -> dict[str, Any]:
     """Combine native status, process exit, and streamed text into one wrapper truth."""
     updated = dict(result)
@@ -864,7 +874,13 @@ def normalize_terminal_result(
     response = str(updated.get("response") or "")
     partial = partial_response.strip()
 
-    if return_code != 0 and native_status == "SUCCESS":
+    if return_code != 0 and native_status == "SUCCESS" and post_result_cleanup:
+        updated["process_cleanup"] = (
+            "AGY emitted a terminal result but did not exit within "
+            f"{RESULT_EXIT_GRACE_SECONDS:.0f} seconds."
+        )
+
+    if return_code != 0 and native_status == "SUCCESS" and not post_result_cleanup:
         updated["agy_status"] = native_status
         updated["status"] = "ERROR"
         updated["wrapper_status"] = "PROCESS_EXIT_MISMATCH"
@@ -886,6 +902,8 @@ def normalize_terminal_result(
         return updated
 
     if response.strip() and native_status == "SUCCESS":
+        if post_result_cleanup:
+            updated["wrapper_status"] = "SUCCESS_WITH_POST_RESULT_CLEANUP"
         return updated
     if partial:
         if native_status == "SUCCESS":
@@ -993,7 +1011,12 @@ def bounded_process_wait(proc: subprocess.Popen[str]) -> int:
             return 124
 
 
-def progress_from_event(event: dict[str, Any], seen_tools: set[tuple[int, str]], tool_counts: collections.Counter[str]) -> None:
+def progress_from_event(
+    event: dict[str, Any],
+    seen_tools: set[tuple[int, str]],
+    active_tools: set[tuple[int, str]],
+    tool_counts: collections.Counter[str],
+) -> None:
     if event.get("event") != "step_update":
         return
     step = event.get("step_update") or {}
@@ -1003,13 +1026,18 @@ def progress_from_event(event: dict[str, Any], seen_tools: set[tuple[int, str]],
     state = str(step.get("state") or "")
     step_index = int(step.get("step_index") or 0)
 
-    if step_type == "tool" and state == "DONE":
+    if step_type == "tool":
         tool_name = str(step.get("tool_name") or (step.get("tool_info") or {}).get("name") or "tool")
         key = (step_index, tool_name)
-        if key not in seen_tools:
-            seen_tools.add(key)
-            tool_counts[tool_name] += 1
-            eprint(f"[agy] tool: {tool_name}")
+        if state == "ACTIVE" and key not in active_tools:
+            active_tools.add(key)
+            eprint(f"[agy] tool active: {tool_name}")
+        elif state == "DONE":
+            active_tools.discard(key)
+            if key not in seen_tools:
+                seen_tools.add(key)
+                tool_counts[tool_name] += 1
+                eprint(f"[agy] tool done: {tool_name}")
 
     subagent_info = step.get("subagent_info")
     if state == "DONE" and isinstance(subagent_info, dict):
@@ -1053,6 +1081,7 @@ class InvocationResult(NamedTuple):
     partial_response: str
     last_event: str
     timed_out: bool
+    post_result_cleanup: bool = False
 
 
 def invoke_once(
@@ -1063,6 +1092,8 @@ def invoke_once(
     *,
     append_raw: bool = False,
     watchdog_seconds: float | None = None,
+    idle_timeout_seconds: float = 600.0,
+    idle_grace_seconds: float = 300.0,
     receipt: RunReceipt | None = None,
     attempt: int = 1,
 ) -> InvocationResult:
@@ -1070,6 +1101,7 @@ def invoke_once(
     stdin_errors: list[str] = []
     tool_counts: collections.Counter[str] = collections.Counter()
     seen_tools: set[tuple[int, str]] = set()
+    active_tools: set[tuple[int, str]] = set()
     session_metadata: dict[str, str] = {}
     conversation_id = ""
     terminal_result: dict[str, Any] | None = None
@@ -1078,12 +1110,35 @@ def invoke_once(
     last_event = "launching"
     timed_out = threading.Event()
     watchdog_stop = threading.Event()
+    watchdog_wakeup = threading.Event()
+    activity_lock = threading.Lock()
+    idle_warned = False
+    timeout_details: dict[str, str] = {}
+    post_result_cleanup = False
+    last_response_report_at = 0.0
     raw_handle = raw_path.open("a" if append_raw else "w", encoding="utf-8") if raw_path else None
     if raw_handle:
         raw_handle.write(json.dumps({"event": "call_agy_attempt", "attempt": attempt}) + "\n")
         raw_handle.flush()
 
     started = time.monotonic()
+    last_activity = started
+
+    def note_stream_activity() -> None:
+        nonlocal last_activity, idle_warned
+        with activity_lock:
+            resumed = idle_warned
+            last_activity = time.monotonic()
+            idle_warned = False
+        watchdog_wakeup.set()
+        if resumed:
+            eprint("[agy] valid stream activity resumed after idle warning")
+            if receipt:
+                receipt.update(
+                    state="STREAMING",
+                    last_event="stream_activity_resumed",
+                    last_diagnostic="",
+                )
     if receipt:
         receipt.update(state="LAUNCHING", last_event=last_event)
     try:
@@ -1128,6 +1183,7 @@ def invoke_once(
             partial_response="",
             last_event="spawn_failed",
             timed_out=False,
+            post_result_cleanup=False,
         )
 
     assert proc.stdin is not None
@@ -1143,17 +1199,68 @@ def invoke_once(
     )
 
     def watchdog() -> None:
-        if watchdog_seconds is None or watchdog_stop.wait(watchdog_seconds):
-            return
-        timed_out.set()
-        if receipt:
-            receipt.update(
-                state="TERMINATING",
-                last_event="wrapper_watchdog_timeout",
-                error=f"Wrapper watchdog expired after {watchdog_seconds:.1f}s.",
-        )
-        eprint(f"[call-agy] wrapper watchdog expired after {watchdog_seconds:.1f}s; terminating agy")
-        terminate_process_tree(proc, reason="wrapper watchdog timeout")
+        nonlocal idle_warned
+        absolute_deadline = started + watchdog_seconds if watchdog_seconds is not None else None
+        while not watchdog_stop.is_set():
+            now = time.monotonic()
+            action = ""
+            message = ""
+            wait_seconds = 1.0
+            with activity_lock:
+                idle_warning_deadline = last_activity + idle_timeout_seconds
+                idle_termination_deadline = idle_warning_deadline + idle_grace_seconds
+                deadlines = [idle_termination_deadline]
+                if not idle_warned:
+                    deadlines.append(idle_warning_deadline)
+                if absolute_deadline is not None:
+                    deadlines.append(absolute_deadline)
+                wait_seconds = max(0.05, min(deadlines) - now)
+
+                if absolute_deadline is not None and now >= absolute_deadline:
+                    action = "TIMEOUT"
+                    message = f"Wrapper hard limit expired after {watchdog_seconds:.1f}s."
+                elif now >= idle_termination_deadline:
+                    action = "IDLE_TIMEOUT"
+                    message = (
+                        "No valid AGY stream activity was received for "
+                        f"{idle_timeout_seconds + idle_grace_seconds:.1f}s "
+                        f"({idle_timeout_seconds:.1f}s idle threshold plus "
+                        f"{idle_grace_seconds:.1f}s grace)."
+                    )
+                elif now >= idle_warning_deadline and not idle_warned:
+                    idle_warned = True
+                    action = "IDLE_WARNING"
+                    message = (
+                        f"No valid AGY stream activity for {idle_timeout_seconds:.1f}s; "
+                        f"waiting {idle_grace_seconds:.1f}s grace before termination."
+                    )
+                    wait_seconds = max(0.05, idle_termination_deadline - now)
+
+            if action == "IDLE_WARNING":
+                eprint(f"[call-agy] WARNING: {message}")
+                if receipt:
+                    receipt.update(
+                        state="IDLE_WARNING",
+                        last_event="idle_warning",
+                        last_diagnostic=message,
+                    )
+                continue
+            if action in {"TIMEOUT", "IDLE_TIMEOUT"}:
+                timeout_details["wrapper_status"] = action
+                timeout_details["message"] = message
+                timed_out.set()
+                if receipt:
+                    receipt.update(
+                        state="TERMINATING",
+                        last_event=action.lower(),
+                        error=message,
+                    )
+                eprint(f"[call-agy] {message} Terminating AGY process tree.")
+                terminate_process_tree(proc, reason=action.lower())
+                return
+
+            watchdog_wakeup.wait(wait_seconds)
+            watchdog_wakeup.clear()
 
     stdin_thread.start()
     stderr_thread.start()
@@ -1183,6 +1290,12 @@ def invoke_once(
             if not isinstance(event, dict):
                 continue
             event_name = str(event.get("event") or "unknown")
+            if (
+                event_name == "init" and isinstance(event.get("init"), dict)
+            ) or (
+                event_name == "step_update" and isinstance(event.get("step_update"), dict)
+            ):
+                note_stream_activity()
             last_event = event_name
             if event.get("event") == "init":
                 conversation_id = str(event.get("conversation_id") or conversation_id)
@@ -1196,6 +1309,7 @@ def invoke_once(
                     conversation_id = str(payload.get("conversation_id") or conversation_id)
                     update_session_metadata(payload, session_metadata)
                     last_event = "result"
+                    eprint(f"[agy] result: {payload.get('status') or 'UNKNOWN'}")
             elif event.get("event") == "step_update":
                 step = event.get("step_update")
                 if isinstance(step, dict):
@@ -1209,8 +1323,6 @@ def invoke_once(
                             or (step.get("tool_info") or {}).get("name")
                             or "tool"
                         )
-                        if step_state == "ACTIVE":
-                            eprint(f"[agy] tool active: {tool_name}")
                         if receipt:
                             receipt.update(
                                 active_tool=(
@@ -1223,7 +1335,23 @@ def invoke_once(
                         delta = step.get("text_delta")
                         if isinstance(delta, str) and delta:
                             partial_fragments.append(delta)
-            progress_from_event(event, seen_tools, tool_counts)
+                            now = time.monotonic()
+                            if (
+                                last_response_report_at == 0.0
+                                or now - last_response_report_at
+                                >= DEFAULT_PROGRESS_REPORT_INTERVAL_SECONDS
+                            ):
+                                response_so_far = "".join(partial_fragments)
+                                compact = re.sub(r"\s+", " ", response_so_far).strip()
+                                tail = compact[-PROGRESS_TAIL_CHARS:]
+                                updated_at = dt.datetime.now().astimezone().isoformat(timespec="seconds")
+                                eprint(
+                                    "[agy] response active: "
+                                    f"chars={len(response_so_far)}, updated={updated_at}, "
+                                    f"tail={json.dumps(tail, ensure_ascii=False)}"
+                                )
+                                last_response_report_at = now
+            progress_from_event(event, seen_tools, active_tools, tool_counts)
             if receipt:
                 receipt.update(
                     state="STREAMING" if terminal_result is None else "FINALIZING",
@@ -1232,14 +1360,35 @@ def invoke_once(
                     partial_response="".join(partial_fragments),
                     tool_counts=dict(tool_counts),
                 )
+            if event_name == "result" and terminal_result is not None:
+                break
     except BaseException:
         terminate_process_tree(proc, reason="wrapper interrupted while reading AGY output")
         raise
     finally:
         proc.stdout.close()
-        return_code = bounded_process_wait(proc)
-        watchdog_stop.set()
-        watchdog_thread.join(timeout=2)
+        if terminal_result is not None:
+            watchdog_stop.set()
+            watchdog_wakeup.set()
+            watchdog_thread.join(timeout=2)
+            try:
+                return_code = proc.wait(timeout=RESULT_EXIT_GRACE_SECONDS)
+            except subprocess.TimeoutExpired:
+                post_result_cleanup = True
+                eprint(
+                    "[call-agy] AGY emitted a terminal result but did not exit within "
+                    f"{RESULT_EXIT_GRACE_SECONDS:.0f}s; cleaning up its process tree"
+                )
+                terminate_process_tree(proc, reason="post-result exit grace expired")
+                try:
+                    return_code = proc.wait(timeout=TERMINATION_GRACE_SECONDS)
+                except subprocess.TimeoutExpired:
+                    return_code = 124
+        else:
+            return_code = bounded_process_wait(proc)
+            watchdog_stop.set()
+            watchdog_wakeup.set()
+            watchdog_thread.join(timeout=2)
         stdin_thread.join(timeout=2)
         stderr_thread.join(timeout=2)
         if raw_handle:
@@ -1254,14 +1403,14 @@ def invoke_once(
             partial_response = terminal_response
         terminal_result = {
             "status": "ERROR",
-            "wrapper_status": "TIMEOUT",
+            "wrapper_status": timeout_details.get("wrapper_status") or "TIMEOUT",
             "response": "",
-            "error": f"Wrapper watchdog timed out after {watchdog_seconds:.1f}s.",
+            "error": timeout_details.get("message") or "Wrapper timeout expired.",
         }
         if native_status:
             terminal_result["agy_status"] = native_status
         return_code = 124
-        last_event = "timeout"
+        last_event = str(terminal_result["wrapper_status"]).lower()
     elif terminal_result is None:
         diagnostics = [*stdin_errors, *list(stderr_lines)[-20:], *malformed_stdout]
         tail = "\n".join(diagnostics)
@@ -1300,6 +1449,7 @@ def invoke_once(
         partial_response=partial_response,
         last_event=last_event,
         timed_out=timed_out.is_set(),
+        post_result_cleanup=post_result_cleanup,
     )
 
 
@@ -1383,6 +1533,9 @@ def write_markdown(
         lines.append(f"- receipt_path: `{receipt_path}`")
     if watchdog_seconds is not None:
         lines.append(f"- wrapper_watchdog: `{watchdog_seconds:.1f}s`")
+    lines.append(f"- agy_total_timeout: `{args.timeout}`")
+    lines.append(f"- idle_warning: `{getattr(args, 'idle_timeout', '10m')}`")
+    lines.append(f"- idle_grace: `{getattr(args, 'idle_grace', '5m')}`")
     lines.append(f"- elapsed: `{elapsed:.1f}s`")
     if "duration_seconds" in result:
         lines.append(f"- agy_cumulative_duration_seconds: `{result['duration_seconds']}`")
@@ -1432,6 +1585,9 @@ def write_markdown(
     error = result.get("error")
     if error:
         lines += ["", "## Error", "", str(error)]
+
+    if result.get("process_cleanup"):
+        lines += ["", "## Process cleanup", "", str(result["process_cleanup"])]
 
     if result.get("recovery_prompt") and result.get("recovery_conversation_id"):
         lines += [
@@ -1484,6 +1640,7 @@ def add_recovery_suggestion(result: dict[str, Any], conversation_id: str) -> dic
     wrapper_status = str(result.get("wrapper_status") or "")
     if not conversation_id or wrapper_status not in {
         "TIMEOUT",
+        "IDLE_TIMEOUT",
         "NO_TERMINAL_RESULT",
         "NO_FINAL_RESPONSE",
         "PROCESS_EXIT_MISMATCH",
@@ -1560,6 +1717,9 @@ def run_locked(args: argparse.Namespace) -> int:
     task = read_task(args)
     prompt = build_prompt(task, workspace, args.files, external_dirs, args.mode)
     serialized_prompt_bytes = prompt_event_size(prompt)
+    print_timeout_seconds = parse_duration_seconds(args.timeout)
+    idle_timeout_seconds = parse_duration_seconds(getattr(args, "idle_timeout", "10m"))
+    idle_grace_seconds = parse_duration_seconds(getattr(args, "idle_grace", "5m"))
     watchdog_seconds = wrapper_timeout_seconds(args.timeout, args.wrapper_timeout)
     agy_version = verify_agy_version(executable)
 
@@ -1571,6 +1731,9 @@ def run_locked(args: argparse.Namespace) -> int:
         print(f"serialized_prompt_bytes={serialized_prompt_bytes}")
         transport = "system-temp-file" if serialized_prompt_bytes > STREAM_INPUT_SAFE_BYTES else "stdin"
         print(f"prompt_transport={transport}")
+        print(f"agy_total_timeout_seconds={print_timeout_seconds:.1f}")
+        print(f"idle_warning_seconds={idle_timeout_seconds:.1f}")
+        print(f"idle_grace_seconds={idle_grace_seconds:.1f}")
         print(f"wrapper_watchdog_seconds={watchdog_seconds:.1f}")
         print(f"recommended_host_timeout_seconds={watchdog_seconds + DEFAULT_WATCHDOG_GRACE_SECONDS:.1f}")
         return 0
@@ -1605,6 +1768,8 @@ def run_locked(args: argparse.Namespace) -> int:
         workspace=workspace,
         mode=args.mode,
         watchdog_seconds=watchdog_seconds,
+        idle_timeout_seconds=idle_timeout_seconds,
+        idle_grace_seconds=idle_grace_seconds,
     )
     print(f"receipt_path={receipt_path}", flush=True)
 
@@ -1705,6 +1870,8 @@ def run_locked(args: argparse.Namespace) -> int:
                 raw_path,
                 append_raw=append_raw,
                 watchdog_seconds=watchdog_seconds,
+                idle_timeout_seconds=idle_timeout_seconds,
+                idle_grace_seconds=idle_grace_seconds,
                 receipt=receipt,
                 attempt=attempt,
             )
@@ -1774,6 +1941,7 @@ def run_locked(args: argparse.Namespace) -> int:
         return_code=return_code,
         sent_prompt_bytes=sent_prompt_bytes,
         prompt_transport=prompt_transport,
+        post_result_cleanup=invocation.post_result_cleanup,
     )
     terminal_result["process_exit_code"] = return_code
     terminal_result["attempt_records"] = attempt_records
@@ -1802,6 +1970,9 @@ def run_locked(args: argparse.Namespace) -> int:
             terminal_result.get("wrapper_status") or ""
         )
     status = str(terminal_result.get("status") or "UNKNOWN")
+    completed_successfully = status == "SUCCESS" and (
+        return_code == 0 or invocation.post_result_cleanup
+    )
     default_handoff_path: pathlib.Path | None = None
     if not args.output or prompt_file_path:
         default_handoff_path, prompt_file_path = finalize_artifact_paths(
@@ -1829,7 +2000,7 @@ def run_locked(args: argparse.Namespace) -> int:
 
     receipt_partial = str(terminal_result.get("partial_response") or invocation.partial_response)
     receipt.update(
-        state="COMPLETE" if status == "SUCCESS" and return_code == 0 else "ERROR",
+        state="COMPLETE" if completed_successfully else "ERROR",
         conversation_id=conversation_id,
         last_event=invocation.last_event,
         partial_response=receipt_partial,
@@ -1852,7 +2023,7 @@ def run_locked(args: argparse.Namespace) -> int:
     print(f"elapsed={elapsed:.1f}s")
     print(f"status={status}")
 
-    if return_code != 0 or status != "SUCCESS":
+    if not completed_successfully:
         err = str(terminal_result.get("error") or "Antigravity did not finish successfully.")
         eprint(f"[call-agy] failed: status={status}, exit={return_code}: {err}")
         return return_code if return_code != 0 else 2
@@ -1891,7 +2062,17 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--model", help="Model slug from `agy models`")
     p.add_argument("--effort", choices=("low", "medium", "high"), help="Reasoning effort")
     p.add_argument("--agent", help="Agent name from `agy agents`")
-    p.add_argument("--timeout", default="10m", help="agy --print-timeout value (default: 10m)")
+    p.add_argument("--timeout", default="2h", help="AGY total --print-timeout ceiling (default: 2h)")
+    p.add_argument(
+        "--idle-timeout",
+        default="10m",
+        help="Warn after this long without a valid AGY stream event (default: 10m)",
+    )
+    p.add_argument(
+        "--idle-grace",
+        default="5m",
+        help="Terminate if stream silence continues this long after the warning (default: 5m)",
+    )
     p.add_argument(
         "--wrapper-timeout",
         help="Hard wrapper watchdog duration; default is --timeout plus 30s",
