@@ -104,7 +104,7 @@ agy
 #### macOS / Linux (POSIX Shell)
 
 ```bash
-./scripts/call_agy.sh "Explain the main request flow in this repository" --workspace .
+sh ./scripts/call_agy.sh "Explain the main request flow in this repository" --workspace .
 ```
 
 #### Windows (PowerShell)
@@ -132,7 +132,7 @@ Explain the core architecture and verify each finding directly against the sourc
 '@ | .\scripts\call_agy.ps1 --workspace .
 ```
 
-*Prompts up to 60 KiB stream directly through memory. Larger serialized prompts are automatically staged in `%TEMP%/call-agy/.big-prompt/` and relocated alongside the final handoff.*
+*Prompts up to 60 KiB stream directly through memory. Larger serialized prompts are staged in a private per-turn directory under `%TEMP%/call-agy/.big-prompt/`, exposed only for that turn, and relocated alongside the final handoff.*
 
 ### 3. Execution Output
 
@@ -155,7 +155,7 @@ status=SUCCESS
 To continue a previous Antigravity session with full historical context, supply the exact `conversation_id`:
 
 ```bash
-./scripts/call_agy.sh \
+sh ./scripts/call_agy.sh \
   "Now add comprehensive unit tests for the edge cases identified above" \
   --workspace . \
   --conversation "<conversation-id>"
@@ -192,12 +192,13 @@ Let Antigravity implement and verify the fix as a sub-agent, then review its han
 | `--effort <low\|medium\|high>` | Reasoning effort level. |
 | `--agent <name>` | Select built-in or custom agent persona from `agy agents`. |
 | `--timeout <duration>` | Execution timeout, e.g., `10m`, `30m` (default: `10m`). |
-| `--wrapper-timeout <duration>` | Hard wrapper watchdog. Defaults to `--timeout` plus 30 seconds; set the host timeout above this value. |
+| `--wrapper-timeout <duration>` | Hard wrapper watchdog. Defaults to `--timeout` plus 30 seconds, must exceed `--timeout`, and should remain below the host timeout. |
 | `--mode <accept-edits\|plan>` | Execution mode; use `accept-edits` for authorized file modifications. |
 | `--sandbox` | Enforce Antigravity terminal sandbox restrictions. |
 | `--dangerously-skip-permissions` | **Dangerous native `agy` flag**: Auto-approve all tool calls. Used by the trusted-workspace preset. |
 | `-o, --output <path>` | Custom Markdown handoff report destination. |
 | `--raw-output <path>` | Debugging: Capture raw NDJSON event stream. |
+| `--force` | Allow explicit output paths to replace existing files; otherwise call-agy selects and reports a unique suffixed name. |
 | `--agy-binary <path>` | Custom `agy` executable path or binary name. |
 | `--dry-run` | Print assembled command shape, prompt size, and transport mode without executing. |
 
@@ -213,7 +214,6 @@ Let Antigravity implement and verify the fix as a sub-agent, then review its han
 - **Read-only Planning**: Use `--mode plan --sandbox` for analysis. In headless runs, shell commands may still require scoped rules; the prompt prefers native read-only file tools to reduce avoidable permission denials.
 - **Explicit Working Directory**: Every delegated prompt instructs Antigravity to operate within the absolute `--workspace` path and routes file changes through native editing tools rather than long inline shell commands.
 - **Boundary Isolation**: `--file` provides prompt hints only; accessing files outside `--workspace` requires explicit authorization via `--add-dir <path>`.
-- **Sensitive Output Filtering**: Raw tool outputs and intermediate execution noise are excluded from the final Markdown handoff to prevent token bloat and inadvertent secret leakage.
 
 ---
 
@@ -231,7 +231,7 @@ If delegation fails (non-zero exit code or non-`SUCCESS` status):
 2. **Safe Recovery**:
    - External file boundary ➔ Add the parent directory with `--add-dir <path>`.
    - Shell permission soft-denial in safe mode ➔ Configure scoped Antigravity rules or confirm permission changes with the user.
-   - Timeout ➔ Increase `--timeout`, keep `--wrapper-timeout` above it, and configure the host timeout above the wrapper watchdog.
+   - Timeout ➔ Read the partial handoff and suggested same-conversation recovery prompt. Only resume explicitly when another turn merits its Token cost; keep `--wrapper-timeout` above `--timeout` and the host timeout above both.
    - Stale session ➔ Re-run without `--conversation` to start a clean context.
 3. **Single Retry Budget**: The wrapper automatically retries once on transient empty zero-token errors (`attempts=2`). If this occurs, do not launch a third attempt.
 

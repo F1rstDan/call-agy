@@ -104,7 +104,7 @@ agy
 #### macOS / Linux (POSIX Shell)
 
 ```bash
-./scripts/call_agy.sh "分析当前仓库的核心请求处理流程并进行总结" --workspace .
+sh ./scripts/call_agy.sh "分析当前仓库的核心请求处理流程并进行总结" --workspace .
 ```
 
 #### Windows (PowerShell)
@@ -132,7 +132,7 @@ python3 scripts/call_agy.py "分析当前仓库的核心请求处理流程并进
 '@ | .\scripts\call_agy.ps1 --workspace .
 ```
 
-*60 KiB 内的提示词通过内存流直通；超长提示词会自动暂存至 `%TEMP%/call-agy/.big-prompt/`，并在运行结束后与最终移交报告归组。*
+*60 KiB 内的提示词通过内存流直通；超长提示词会暂存至 `%TEMP%/call-agy/.big-prompt/` 下每轮独立的私有目录，仅向本轮 AGY 暴露，并在运行结束后与最终移交报告归组。*
 
 ### 3. 标准执行输出
 
@@ -155,7 +155,7 @@ status=SUCCESS
 若后续任务依赖上一轮的上下文，可传入返回的 `conversation_id` 进行无缝恢复：
 
 ```bash
-./scripts/call_agy.sh \
+sh ./scripts/call_agy.sh \
   "基于上面的分析结果，为边界异常场景补充单元测试" \
   --workspace . \
   --conversation "<conversation-id>"
@@ -192,12 +192,13 @@ status=SUCCESS
 | `--effort <low\|medium\|high>` | 设定模型推理思考强度。 |
 | `--agent <name>` | 指定内置或自定义 Agent 身份（可从 `agy agents` 中获取）。 |
 | `--timeout <duration>` | 运行超时时间，例如 `10m`, `30m`（默认：`10m`）。 |
-| `--wrapper-timeout <duration>` | Wrapper 硬看门狗；默认比 `--timeout` 多 30 秒，宿主超时应设置得更长。 |
+| `--wrapper-timeout <duration>` | Wrapper 硬看门狗；默认比 `--timeout` 多 30 秒，必须大于 `--timeout`，并应小于宿主超时。 |
 | `--mode <accept-edits\|plan>` | 执行模式；在明确授权修改代码时请使用 `accept-edits`。 |
 | `--sandbox` | 启用 Antigravity 终端沙箱限制。 |
 | `--dangerously-skip-permissions` | **原生 `agy` 高危参数**：自动批准全部工具调用。受信任工作区修改预设默认使用。 |
 | `-o, --output <path>` | 自定义 Markdown 移交报告保存路径。 |
 | `--raw-output <path>` | 调试专用：捕获原始 NDJSON 事件流。 |
+| `--force` | 允许显式输出路径覆盖已有文件；否则自动选择并报告带唯一后缀的新文件名。 |
 | `--agy-binary <path>` | 覆盖 `agy` 可执行文件路径或名称。 |
 | `--dry-run` | 仅打印命令结构、序列化提示词大小与选定传输方式，不执行任务。 |
 
@@ -213,7 +214,6 @@ status=SUCCESS
 - **只读规划**：分析任务使用 `--mode plan --sandbox`。无头运行中的 shell 命令仍可能需要细粒度规则；提示词会优先要求使用原生只读文件工具，以减少无谓的权限拒绝。
 - **显式工作目录指令**：每次委托都会要求 Antigravity 直接在 `--workspace` 绝对路径下工作，并使用原生文件编辑工具写入内容，避免 Windows 下的长内联 shell 命令。
 - **外部目录边界隔离**：`--file` 仅作为优先级提示，无法越权访问工作区外的文件；如需访问外部模块，必须显式声明 `--add-dir <path>`。
-- **敏感信息脱敏**：标准 Markdown 移交报告默认丢弃工具调用的原始入参和输出日志，避免 Token 膨胀与敏感信息泄露。
 
 ---
 
@@ -231,7 +231,7 @@ status=SUCCESS
 2. **安全恢复**：
    - 外部文件边界 ➔ 使用 `--add-dir <path>` 补充目标所在的外部目录。
    - 安全模式下 shell 权限软拒绝 ➔ 配置细粒度 Antigravity 命令规则，或与用户确认是否调整权限。
-   - 超时中断 ➔ 增加 `--timeout`，确保 `--wrapper-timeout` 更长，并把宿主超时设置在 Wrapper 看门狗之上。
+   - 超时中断 ➔ 先读取部分交付与同会话恢复建议；只有额外一轮 Token 成本值得时才显式续接。`--wrapper-timeout` 必须大于 `--timeout`，宿主超时再高于两者。
    - 会话失效 ➔ 移除 `--conversation` 参数重新开启新会话。
 3. **单次重试额度**：针对由于偶发性空错误导致的零 Token 失败，Wrapper 会自动重试一次（输出 `attempts=2`）；此时请勿发起第三次重试。
 

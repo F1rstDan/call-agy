@@ -18,7 +18,7 @@ Use the official local `agy` CLI as a bounded sub-agent. The calling Agent remai
 
 ## Compact Workflow
 
-1. For a smoke test or direct text reply, skip repository discovery and file hints. Otherwise read enough local context to state the goal, completion criteria, constraints, expected verification, workspace, and up to six priority paths.
+1. For a smoke test or direct text reply, skip repository discovery and file hints. Otherwise read enough local context to state the goal, completion criteria, constraints, expected verification, workspace, and up to six priority paths. For broad inspection, tell AGY to keep exploration proportional, avoid unbounded recursion, and deliver gathered evidence before time expires; do not impose fixed exclusions that could hide an explicit target.
 2. Separate execution intent from authorization. Use `plan` only for planning/read-only work, `accept-edits` for authorized changes, and scoped permission rules for commands. Announce the trusted-workspace preset before using it.
 3. Invoke the OS-native launcher once. Use `--task` for a short request, stdin for a multiline request, and `--file` for priority paths.
 4. On `status=SUCCESS`, read the reported `output_path`, inspect any actual diff, and run host-side verification proportional to risk.
@@ -51,7 +51,7 @@ still need scoped `permissions.allow` rules. The wrapper prefers native read-onl
 for plan tasks and reports `HEADLESS_PERMISSION_BLOCKED` rather than silently escalating.
 
 ```bash
-./scripts/call_agy.sh "Review the request flow and cite relevant files" --workspace .
+sh ./scripts/call_agy.sh "Review the request flow and cite relevant files" --workspace .
 ```
 
 Authorized edits in a trusted workspace use the success-first preset selected by this Skill:
@@ -73,7 +73,8 @@ If the user requests safe, conservative, or no-bypass behavior, use:
 
 Preserve that safe posture during recovery. Never add the dangerous flag silently.
 
-Before model invocation, the wrapper verifies that `~/.gemini/antigravity-cli` is writable.
+Before model invocation, the wrapper verifies the AGY version and reversibly probes the state
+root plus existing runtime subdirectories under `~/.gemini/antigravity-cli`.
 If the host sandbox blocks that state directory, it emits a failure handoff without consuming
 model tokens. It also prints `receipt_path` before launching AGY; this incrementally updated
 artifact preserves the conversation ID, last event, completed tool counts, diagnostics, and
@@ -103,18 +104,22 @@ status=SUCCESS
 ```
 
 Every non-dry run prints `receipt_path=<absolute-markdown-path>` before starting AGY. The
-wrapper hard watchdog defaults to `--timeout` plus 30 seconds; configure the host process
-timeout above that value so the wrapper can terminate AGY and finalize its handoff.
+wrapper hard watchdog defaults to `--timeout` plus 30 seconds; an explicit watchdog must be
+greater than `--timeout`. Configure the host process timeout above that value so the wrapper
+can terminate the AGY process tree and finalize its handoff.
 
 For the narrow transient failure `ERROR` + empty response + zero token usage + no tool step, the wrapper repeats the same fresh invocation once. It reports `attempts=2`; this consumes the single retry budget, so the host must not launch a third attempt.
 
 - Read the handoff only after a successful run.
 - An empty final response is never treated as success. Streamed `agent_response.text_delta`
   text is recovered when available; otherwise the handoff says that no final response was received.
+- On timeout or an incomplete terminal result with a conversation ID, read the handoff's
+  suggested recovery prompt. The wrapper never launches that extra turn automatically.
 - Treat the handoff as evidence to review, not as automatic truth or task completion.
 - For edits, inspect the real workspace/diff and rerun relevant tests from the host.
 - Resume only when prior Antigravity context helps, using `--conversation <id>` rather than workspace-global `--continue`.
 - The standard handoff includes the complete assembled prompt delegated to Antigravity. List `prompt_file_path`, `raw_output_path`, or host-created prompt intermediates only when they exist.
+- Treat `--raw-output` and every reported artifact path as potentially sensitive.
 
 ## Progressive References
 

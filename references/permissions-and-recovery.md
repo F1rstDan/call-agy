@@ -67,8 +67,13 @@ When the wrapper exits non-zero or reports a non-`SUCCESS` status:
 5. If the corrected retry fails or needs new authority, stop and ask the user rather than completing the original task in the host Agent.
 
 The wrapper prints `receipt_path` before launching Antigravity. Read that receipt when the
-host kills the process before stdout contains a final `output_path`; it is updated atomically
-with the conversation ID, last event, tool counts, diagnostics, and recovered response text.
+host kills the process before stdout contains a final `output_path`; it is updated atomically on
+a best-effort basis with the conversation ID, last event, tool counts, diagnostics, and recovered
+response text. Receipt write failure warns once and does not interrupt AGY stream consumption.
+
+Preflight permission counts are observations, not proof that a task is authorized. An unrelated
+allow rule does not grant command access, and deny/ask rules take precedence. The wrapper warns
+whenever it cannot prove the exact commands needed by the task—which is normally the case.
 
 If the launcher prints no `output_path`, inspect its classified stderr first. Handle `AGY_NOT_FOUND`, `AUTH_REQUIRED`, `HOST_SANDBOX_BLOCKED`, or `AGY_VERSION_UNSUPPORTED` using the actions below; otherwise correct the native shell invocation before diagnosing `agy`. On Windows, use one PowerShell process and invoke `call_agy.ps1` directly with `&`.
 
@@ -82,7 +87,7 @@ The wrapper reports these onboarding failures:
   - Windows PowerShell: `irm https://antigravity.google/cli/install.ps1 | iex`
   - macOS/Linux: `curl -fsSL https://antigravity.google/cli/install.sh | bash`
 - `AUTH_REQUIRED`: ask the user to run `agy` in a terminal to sign in, then retry.
-- `HOST_SANDBOX_BLOCKED`: agy was found and started, but the host sandbox denied its state directory under `~/.gemini/antigravity-cli`. Request host-level access to that directory and retry the same task. Antigravity's `--sandbox` and `--dangerously-skip-permissions` do not override the host sandbox.
+- `HOST_SANDBOX_BLOCKED`: the reversible preflight found that the state root or an existing runtime subdirectory under `~/.gemini/antigravity-cli` was not writable. Request host-level access and retry the same task. Antigravity's `--sandbox` and `--dangerously-skip-permissions` do not override the host sandbox.
 - `HEADLESS_PERMISSION_BLOCKED`: a tool required an interactive decision that headless mode could not obtain. Add the narrow required `permissions.allow` rule or explicitly authorize the trusted-workspace preset.
 - `AGY_VERSION_UNSUPPORTED`: run `agy update` or reinstall the current CLI; call-agy requires `agy 1.1.15+`.
 
@@ -101,21 +106,23 @@ The wrapper reports these onboarding failures:
 | No `output_path` and no classified onboarding error | Correct the OS-native command and quoting; this is not yet an `agy` failure. |
 | Opaque zero-token error before tools | Let the wrapper retry once unchanged; do not switch model or permission posture. |
 | Non-success terminal status | Preserve status and diagnostics; do not present the task as complete. |
-| `wrapper_status=TIMEOUT` | Read the partial receipt/handoff, then increase the bounded timeout once only if the task still merits it. |
+| `wrapper_status=TIMEOUT` | Read the partial receipt/handoff and its suggested same-conversation recovery prompt. Decide explicitly whether another turn merits its Token cost. |
 | `wrapper_status=NO_TERMINAL_RESULT` | Use the recovered stream text and diagnostics; do not claim a completed response. |
 | `wrapper_status=NO_FINAL_RESPONSE` | Treat the run as failed even if native AGY reported `SUCCESS`. |
 
 Any native `SUCCESS` with an empty final response is converted to wrapper failure unless a
 usable response can be reconstructed from stream-json `text_delta` events. A zero-usage,
-zero-turn case additionally reports the serialized prompt size and possible large-input cause.
+zero-turn case reports the original task size, actual transport, and serialized message size sent to AGY without guessing at a cause.
 
 ## Timeout Coordination
 
 `--timeout` remains Antigravity's print timeout. The wrapper watchdog defaults to that value
 plus 30 seconds, giving AGY time to emit its terminal result. `--wrapper-timeout` can override
-the hard watchdog. The host process timeout must exceed the wrapper watchdog; `--dry-run`
-prints a recommended host timeout. On expiry, the wrapper terminates AGY, preserves partial
-stream text, and writes `wrapper_status=TIMEOUT`.
+the hard watchdog but must remain greater than `--timeout`. The host process timeout must exceed
+the wrapper watchdog; `--dry-run` prints a recommended host timeout. On expiry, the wrapper
+terminates the AGY process tree, preserves partial stream text, and writes `wrapper_status=TIMEOUT`.
+It does not automatically spend another turn; when a conversation ID exists, the handoff includes
+a concise recovery prompt for an explicit resume.
 
 ## No Host Takeover on Delegation Failure
 
@@ -123,7 +130,7 @@ Recovery repairs the requested Antigravity delegation chain. It does not authori
 
 ## Sensitive Artifacts
 
-- Standard handoffs include the exact assembled delegated prompt but omit raw tool arguments and output. Treat the handoff as potentially sensitive when the task prompt contains private data.
-- Treat `--raw-output` files as potentially sensitive.
+- Standard handoffs include the exact assembled delegated prompt but omit raw tool arguments and output. Treat them as potentially sensitive.
+- `--raw-output` contains the full native NDJSON stream and is the most sensitive diagnostic artifact.
 - Report any wrapper-created `prompt_file_path`; do not delete it without user authorization.
 - Report host-created prompt intermediates when they exist.
