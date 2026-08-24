@@ -6,6 +6,7 @@ Load this reference for setup, non-default flags, multiline or large prompts, se
 
 - Official Antigravity CLI `1.1.15+`. The wrapper checks `PATH`, then the official default location (`%LOCALAPPDATA%/agy/bin/agy.exe` on Windows or `~/.local/bin/agy` on macOS/Linux); use `--agy-binary` for a custom location.
 - One prior interactive `agy` login. Headless mode uses locally cached credentials; this Skill does not need an API key.
+- Host-level write access to `~/.gemini/antigravity-cli`; the wrapper probes this before model invocation because AGY needs it for settings, cache, conversations, and runtime artifacts.
 - Python 3.10+ for `scripts/call_agy.py`.
 - A host Agent that can read `SKILL.md` and run a local process.
 
@@ -89,6 +90,7 @@ Never guess a slug or replace an unavailable pinned model without the user's dir
 | `--effort <low|medium|high>` | Explicit reasoning effort. |
 | `--agent <name>` | Explicit agent from `agy agents`. |
 | `--timeout <duration>` | Print timeout such as `10m` or `90s`; wrapper default `10m`. |
+| `--wrapper-timeout <duration>` | Hard process watchdog; defaults to `--timeout` plus 30 seconds. |
 | `--mode <accept-edits|plan>` | Antigravity execution mode. |
 | `--sandbox` | Enable terminal sandbox restrictions. |
 | `--dangerously-skip-permissions` | Auto-approve every Antigravity tool call; high risk. |
@@ -101,6 +103,6 @@ Task text may be the first positional argument, `--task`, or stdin. It is sent t
 
 ## Handoff
 
-The standard Markdown handoff includes the complete assembled prompt delegated to Antigravity, the final response, conversation ID, terminal status, explicitly selected model/effort when available, requested agent override, compact tool counts, token usage when reported, and elapsed time. Unreported model, effort, and CLI version fields are omitted. If the wrapper recovered from its narrow automatic pre-model retry, it also records `attempts: 2` and the previous attempt's conversation ID.
+The standard Markdown handoff includes the complete assembled prompt delegated to Antigravity, the final or recovered partial response, conversation ID, native and wrapper status, explicitly selected model/effort when available, requested agent override, compact tool counts, token usage when reported, and elapsed time. Unreported model, effort, and CLI version fields are omitted. If the wrapper recovered from its narrow automatic pre-model retry, it also records `attempts: 2` and the previous attempt's conversation ID.
 
-Raw tool arguments and outputs are omitted by default. A standard stdout receipt contains `conversation_id`, `output_path`, `elapsed`, and `status`; it may additionally report `attempts=2`, `prompt_file_path`, or `raw_output_path`. Without `--output`, turns from the same conversation share `%TEMP%/call-agy/<conversation-id>/` and use unique `<turn-id>-handoff.md` filenames. Artifacts without a conversation ID remain directly under `%TEMP%/call-agy/`; `conversation_id`, not a temporary file, is the resume handle.
+Raw tool arguments and outputs are omitted by default. Every non-dry run first prints `receipt_path` for an atomically updated crash/interruption receipt, then prints the final `conversation_id`, `output_path`, `elapsed`, and `status` when finalization completes. It may additionally report `attempts=2`, `prompt_file_path`, or `raw_output_path`. Without `--output`, turns from the same conversation share `%TEMP%/call-agy/<conversation-id>/` and use unique `<turn-id>-handoff.md` filenames. Artifacts without a conversation ID remain directly under `%TEMP%/call-agy/`; `conversation_id`, not a temporary file, is the resume handle.

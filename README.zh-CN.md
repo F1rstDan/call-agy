@@ -25,7 +25,7 @@
 - **在常用 Agent 中直接体验新模型**：直接在日常使用的 AI Agent 宿主中调用（如 Codex、DeepSeek Harness），将 `agy` 作为专属子 Agent 调度，无需切换工具或工作流即可快速体验与评测 Antigravity 上的前沿模型。
 - **零 API Key 极速起步**：开箱即用。只要本地完成过一次官方交互式登录（在终端运行 `agy`），Skill 即可直接调用，全程无需向宿主或 Skill 配置任何 API 密钥或环境变量。
 - **基于官方文档的子 Agent 边界**：严格基于官方无头 CLI 接口进行任务级委托，**不是**模型层代理（Shim）；不提取 OAuth 凭据，不暴露未授权的网络代理端点，架构边界清晰透明。
-- **结构化 Markdown 移交报告**：实时流式解析官方 `stream-json` 事件并过滤高噪工具输出，生成包含完整组装提示词、最终执行结果、工具调用频次、Token 统计与会话元数据的紧凑交付报告。
+- **结构化移交与持久回执**：实时解析官方 `stream-json` 事件并生成紧凑 Markdown 报告；在启动 `agy` 前先写入暂存回执，持续保存部分响应与诊断，进程被中断时也不会退化成误导性的“空成功”。
 - **长提示词直通与多轮会话接续**：60 KiB 内消息通过 `stdin` 直通发送；超长提示词自动安全暂存并与会话交付报告归组。返回确定性 `conversation_id`，支持多轮上下文无损接续。
 - **原生全平台与可控安全姿态**：提供零额外依赖的 POSIX Shell (`call_agy.sh`)、Windows PowerShell (`call_agy.ps1`) 与跨平台 Python (`call_agy.py`) 启动脚本；提供受信任工作区快速修改预设与显式安全模式（Safe Mode）。
 
@@ -41,7 +41,7 @@
 
 1. **宿主编排 (Host Orchestration)**：调度 AI Agent 明确任务目标、模型选择（`--model`）、验收标准与工作区边界，并提供可选的优先级参考文件（`--file`）。
 2. **协议桥接 (Protocol Bridge)**：`call_agy.py` 标准化路径参数并调用 `agy --print= --input-format stream-json --output-format stream-json`，通过标准输入流式传递组装提示词。
-3. **自主执行 (Autonomous Execution)**：Antigravity 作为子 Agent 在工作区内按指定权限运行。受信任工作区预设会自动批准工具调用；安全模式保留常规权限确认提示。
+3. **授权执行 (Authorized Execution)**：Antigravity 在指定工作区内运行。`--mode plan` 表达只读意图，`--mode accept-edits` 允许已授权的编辑；无头命令执行另由 Antigravity 权限规则或显式自动批准参数控制。
 4. **结构化交付 (Structured Handoff)**：`call-agy` 捕获终端结果与执行指标，过滤冗余日志，生成紧凑的 Markdown 移交报告并保存至系统临时目录。
 5. **宿主审查 (Host Verification)**：调度 Agent 读取移交报告并审查工作区实际代码 Diff，验证无误后向用户汇报或继续后续多轮任务。
 
@@ -51,6 +51,7 @@
 
 - **Antigravity CLI**：官方 `agy` 命令行工具（需 **1.1.15+** 以支持结构化 `stream-json` 输入与输出；推荐使用最新版）。
 - **本地认证**：只需在终端运行一次官方 `agy` 完成常规登录。**无需配置任何 API 密钥或环境变量**。
+- **状态目录权限**：宿主进程必须可读写 `~/.gemini/antigravity-cli`；外层宿主沙盒造成的拒绝无法通过 `agy` 的 mode 或 sandbox 参数覆盖。
 - **Python 环境**：Python 3.10+（可通过 `python`、`python3` 或 `py` 调用）。
 - **宿主 Agent**：任何能够读取 `SKILL.md` 并执行本地进程的 AI Agent 环境（如 Codex、DeepSeek Harness）。
 
@@ -138,13 +139,14 @@ python3 scripts/call_agy.py "分析当前仓库的核心请求处理流程并进
 任务完成后，`call-agy` 会向标准输出打印紧凑的元数据：
 
 ```text
+receipt_path=<system-temp>/call-agy/.staging/<turn-id>-receipt.md
 conversation_id=<conversation-id>
 output_path=<system-temp>/call-agy/<conversation-id>/<turn-id>-handoff.md
 elapsed=14.2s
 status=SUCCESS
 ```
 
-调度 Agent 读取 `output_path` 文件获取结构化报告，并在接纳结果前审查实际的工作区变更。`conversation_id` 为后续恢复多轮会话的唯一标识凭证。
+`receipt_path` 会在启动 `agy` 前输出；即使宿主在最终交付生成前杀死 Wrapper，它仍可用于恢复最后事件、部分响应和诊断。调度 Agent 优先读取 `output_path`，缺失时读取回执，并在接纳结果前审查实际工作区变更。`conversation_id` 是后续接续会话的确定性标识。
 
 ---
 
@@ -190,6 +192,7 @@ status=SUCCESS
 | `--effort <low\|medium\|high>` | 设定模型推理思考强度。 |
 | `--agent <name>` | 指定内置或自定义 Agent 身份（可从 `agy agents` 中获取）。 |
 | `--timeout <duration>` | 运行超时时间，例如 `10m`, `30m`（默认：`10m`）。 |
+| `--wrapper-timeout <duration>` | Wrapper 硬看门狗；默认比 `--timeout` 多 30 秒，宿主超时应设置得更长。 |
 | `--mode <accept-edits\|plan>` | 执行模式；在明确授权修改代码时请使用 `accept-edits`。 |
 | `--sandbox` | 启用 Antigravity 终端沙箱限制。 |
 | `--dangerously-skip-permissions` | **原生 `agy` 高危参数**：自动批准全部工具调用。受信任工作区修改预设默认使用。 |
@@ -204,8 +207,10 @@ status=SUCCESS
 
 - **基于官方文档的子 Agent 委托**：`call-agy` 仅通过官方无头模式调用本地 `agy` CLI。它不是模型代理，不提取 OAuth 访问凭据，也不提供外部网络端点。
 - **零凭据暴露与安全隔离**：Skill 本身无需也绝不读取、存储任何 API 密钥或 OAuth 凭据，完全依赖官方 CLI 管理的本地用户会话。
+- **四层权限相互独立**：宿主文件系统策略、Antigravity 终端沙箱、mode 意图和 Antigravity 工具权限是四个独立控制层；放开其中一层不会覆盖其他层。
+- **状态目录预检**：消耗模型 Token 前，Wrapper 会在 `~/.gemini/antigravity-cli` 执行可逆写入探针；持久化不可用时以 `HOST_SANDBOX_BLOCKED` 或 `AGY_STATE_UNAVAILABLE` 失败。
 - **受信任工作区修改预设**：用户授权在受信任工作区修改代码时，宿主流程首调使用 `--mode accept-edits --sandbox --dangerously-skip-permissions` 自动批准工具调用；`--sandbox` 会约束终端执行，但不能让任意写入变得无害。
-- **安全修改覆盖**：用户明确要求安全模式或保守权限时，宿主改用 `--mode accept-edits --sandbox`，保留全部交互式权限检查。
+- **只读规划**：分析任务使用 `--mode plan --sandbox`。无头运行中的 shell 命令仍可能需要细粒度规则；提示词会优先要求使用原生只读文件工具，以减少无谓的权限拒绝。
 - **显式工作目录指令**：每次委托都会要求 Antigravity 直接在 `--workspace` 绝对路径下工作，并使用原生文件编辑工具写入内容，避免 Windows 下的长内联 shell 命令。
 - **外部目录边界隔离**：`--file` 仅作为优先级提示，无法越权访问工作区外的文件；如需访问外部模块，必须显式声明 `--add-dir <path>`。
 - **敏感信息脱敏**：标准 Markdown 移交报告默认丢弃工具调用的原始入参和输出日志，避免 Token 膨胀与敏感信息泄露。
@@ -220,12 +225,13 @@ status=SUCCESS
    - `AGY_NOT_FOUND` ➔ 检查 PATH 环境变量，或通过 `--agy-binary <path>` 指定 CLI 绝对路径。
    - `AUTH_REQUIRED` ➔ 在终端运行 `agy` 完成交互式登录，然后重试。
    - `HOST_SANDBOX_BLOCKED` ➔ 请求宿主层开放 `~/.gemini/antigravity-cli` 的文件访问权限。
+   - `HEADLESS_PERMISSION_BLOCKED` ➔ 添加范围最小的 Antigravity allow 规则；仅在用户已授权时使用显式自动批准。
    - `AGY_VERSION_UNSUPPORTED` ➔ 当前 CLI 不支持所需的无头参数；运行 `agy update` 或升级安装。
-   - 未生成 `output_path` ➔ Wrapper 启动前即失败，请先检查 shell 命令语法。
+   - 未生成 `output_path` ➔ 读取已输出的 `receipt_path`，其中保留中断前的最后事件、部分响应与诊断。
 2. **安全恢复**：
    - 外部文件边界 ➔ 使用 `--add-dir <path>` 补充目标所在的外部目录。
    - 安全模式下 shell 权限软拒绝 ➔ 配置细粒度 Antigravity 命令规则，或与用户确认是否调整权限。
-   - 超时中断 ➔ 适当增加 `--timeout 20m`。
+   - 超时中断 ➔ 增加 `--timeout`，确保 `--wrapper-timeout` 更长，并把宿主超时设置在 Wrapper 看门狗之上。
    - 会话失效 ➔ 移除 `--conversation` 参数重新开启新会话。
 3. **单次重试额度**：针对由于偶发性空错误导致的零 Token 失败，Wrapper 会自动重试一次（输出 `attempts=2`）；此时请勿发起第三次重试。
 

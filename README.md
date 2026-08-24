@@ -25,7 +25,7 @@
 - **Explore New Models in Your Host Agent**: Call Antigravity directly from the AI coding environments you already use (e.g., Codex and DeepSeek Harness). Treat `agy` as a specialized sub-agent to test-drive, benchmark, and evaluate new models without switching tools or context.
 - **Zero API Keys & Zero-Cost Onboarding**: Get started immediately. As long as you have completed a one-time interactive login via the official `agy` CLI, the Skill is ready to use—no API keys, tokens, or secrets need to be configured or shared.
 - **Documented Sub-Agent Boundary**: Designed around task-level delegation through the official headless CLI interface. It is **not** a model-provider shim, never extracts OAuth credentials, and never exposes unauthenticated proxy endpoints.
-- **Structured Markdown Handoffs**: Streams and parses official `stream-json` events into a clean, noise-filtered Markdown handoff containing the exact assembled delegated prompt, final output, tool call statistics, token usage, and session metadata.
+- **Structured Markdown Handoffs & Durable Receipts**: Streams and parses official `stream-json` events into a clean Markdown handoff. A staging receipt is written before `agy` starts and continuously records partial response text and diagnostics, so interruption does not collapse into a misleading empty-success message.
 - **Direct Long-Prompt Input & Resumable Sessions**: Sends messages up to 60 KiB directly through `stdin`. Larger prompts are safely staged beside the conversation handoff. Captures deterministic `conversation_id`s for seamless multi-turn follow-ups without context drift.
 - **Cross-Platform & Flexible Safety Postures**: Includes zero-dependency native launchers for POSIX (`call_agy.sh`), Windows PowerShell (`call_agy.ps1`), and universal Python (`call_agy.py`). Provides a success-first preset for trusted workspaces alongside an explicit safe-mode override.
 
@@ -41,7 +41,7 @@
 
 1. **Host Orchestration**: The calling AI Agent formulates a bounded task, setting parameters such as model selection (`--model`), completion criteria, workspace boundaries, and optional priority files (`--file`).
 2. **Protocol Bridge**: `call_agy.py` normalizes paths and invokes `agy --print= --input-format stream-json --output-format stream-json`, streaming the assembled prompt via standard input.
-3. **Autonomous Execution**: Antigravity executes inside the designated workspace. In trusted workspaces, the success-first preset auto-approves tool actions; safe mode preserves standard interactive permission checks.
+3. **Authorized Execution**: Antigravity executes inside the designated workspace. `--mode plan` expresses read-only intent; `--mode accept-edits` permits authorized edits. Headless command execution is governed separately by Antigravity permission rules or an explicit auto-approval flag.
 4. **Structured Handoff**: `call-agy` captures the terminal state, filters noisy tool payloads, and saves a compact Markdown handoff report under the system temporary directory.
 5. **Host Verification**: The calling Agent inspects the handoff report and verifies actual workspace diffs before presenting the final result or proceeding with follow-up turns.
 
@@ -51,6 +51,7 @@
 
 - **Antigravity CLI**: Official `agy` binary (version **1.1.15+** required for structured `stream-json` I/O; latest version recommended).
 - **Authentication**: Signed in once via interactive terminal session (`agy`). **No API keys required**.
+- **State-directory access**: The host process must be able to read and write `~/.gemini/antigravity-cli`; nested host sandboxes cannot be overridden by `agy` mode or sandbox flags.
 - **Python**: Python 3.10+ available on PATH (callable via `python`, `python3`, or `py`).
 - **Host Agent**: Any AI Agent capable of loading `SKILL.md` and launching local subprocesses, such as Codex or DeepSeek Harness.
 
@@ -138,13 +139,14 @@ Explain the core architecture and verify each finding directly against the sourc
 Upon completion, `call-agy` outputs compact metadata to stdout:
 
 ```text
+receipt_path=<system-temp>/call-agy/.staging/<turn-id>-receipt.md
 conversation_id=<conversation-id>
 output_path=<system-temp>/call-agy/<conversation-id>/<turn-id>-handoff.md
 elapsed=14.2s
 status=SUCCESS
 ```
 
-The calling Agent reads `output_path` to review the structured findings and verifies any repository changes. The `conversation_id` serves as the durable handle for multi-turn continuations.
+`receipt_path` is emitted before `agy` launches and remains available if the host kills the wrapper before a final handoff is produced. The calling Agent reads `output_path` when present, otherwise the receipt, and verifies any repository changes. The `conversation_id` serves as the durable handle for multi-turn continuations.
 
 ---
 
@@ -190,6 +192,7 @@ Let Antigravity implement and verify the fix as a sub-agent, then review its han
 | `--effort <low\|medium\|high>` | Reasoning effort level. |
 | `--agent <name>` | Select built-in or custom agent persona from `agy agents`. |
 | `--timeout <duration>` | Execution timeout, e.g., `10m`, `30m` (default: `10m`). |
+| `--wrapper-timeout <duration>` | Hard wrapper watchdog. Defaults to `--timeout` plus 30 seconds; set the host timeout above this value. |
 | `--mode <accept-edits\|plan>` | Execution mode; use `accept-edits` for authorized file modifications. |
 | `--sandbox` | Enforce Antigravity terminal sandbox restrictions. |
 | `--dangerously-skip-permissions` | **Dangerous native `agy` flag**: Auto-approve all tool calls. Used by the trusted-workspace preset. |
@@ -204,8 +207,10 @@ Let Antigravity implement and verify the fix as a sub-agent, then review its han
 
 - **Documented Sub-Agent Delegation**: `call-agy` interacts with the official `agy` binary exclusively via documented headless mode. It is not a model proxy, does not extract OAuth tokens, and does not expose external network listeners.
 - **Zero Credential Exposure**: The Skill never asks for, reads, or stores API keys or OAuth secrets. It relies entirely on the local user session managed by the official binary.
+- **Four Independent Permission Layers**: Host filesystem policy, Antigravity terminal sandboxing, mode intent, and Antigravity tool permissions are separate controls. Relaxing one layer does not override another.
+- **State Preflight**: Before spending model tokens, the wrapper performs a reversible write probe in `~/.gemini/antigravity-cli` and fails with `HOST_SANDBOX_BLOCKED` or `AGY_STATE_UNAVAILABLE` when persistence cannot work.
 - **Trusted-Workspace Mutation Preset**: When authorized to modify code in a trusted workspace, the host workflow uses `--mode accept-edits --sandbox --dangerously-skip-permissions` on the first turn. This auto-approves Antigravity tool calls; `--sandbox` constrains terminal execution but does not make arbitrary edits harmless.
-- **Safe Mode Override**: When the user requests safe or conservative execution, the host supplies `--mode accept-edits --sandbox` to keep all interactive permission prompts active.
+- **Read-only Planning**: Use `--mode plan --sandbox` for analysis. In headless runs, shell commands may still require scoped rules; the prompt prefers native read-only file tools to reduce avoidable permission denials.
 - **Explicit Working Directory**: Every delegated prompt instructs Antigravity to operate within the absolute `--workspace` path and routes file changes through native editing tools rather than long inline shell commands.
 - **Boundary Isolation**: `--file` provides prompt hints only; accessing files outside `--workspace` requires explicit authorization via `--add-dir <path>`.
 - **Sensitive Output Filtering**: Raw tool outputs and intermediate execution noise are excluded from the final Markdown handoff to prevent token bloat and inadvertent secret leakage.
@@ -220,12 +225,13 @@ If delegation fails (non-zero exit code or non-`SUCCESS` status):
    - `AGY_NOT_FOUND` ➔ Check PATH or specify the binary location using `--agy-binary <path>`.
    - `AUTH_REQUIRED` ➔ Run `agy` interactively in a terminal to log in, then retry.
    - `HOST_SANDBOX_BLOCKED` ➔ Grant host agent filesystem access to `~/.gemini/antigravity-cli`.
+   - `HEADLESS_PERMISSION_BLOCKED` ➔ Add a narrowly scoped Antigravity allow rule, or use explicit auto-approval only when the user authorized it.
    - `AGY_VERSION_UNSUPPORTED` ➔ Installed CLI lacks required headless flags; run `agy update` or reinstall.
-   - No `output_path` generated ➔ Wrapper failed before startup; verify shell syntax before inspecting `agy`.
+   - No `output_path` generated ➔ Read the emitted `receipt_path`; it contains the last event, partial response, and diagnostic available before interruption.
 2. **Safe Recovery**:
    - External file boundary ➔ Add the parent directory with `--add-dir <path>`.
    - Shell permission soft-denial in safe mode ➔ Configure scoped Antigravity rules or confirm permission changes with the user.
-   - Timeout ➔ Increase duration with `--timeout 20m`.
+   - Timeout ➔ Increase `--timeout`, keep `--wrapper-timeout` above it, and configure the host timeout above the wrapper watchdog.
    - Stale session ➔ Re-run without `--conversation` to start a clean context.
 3. **Single Retry Budget**: The wrapper automatically retries once on transient empty zero-token errors (`attempts=2`). If this occurs, do not launch a third attempt.
 
