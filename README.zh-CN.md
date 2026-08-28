@@ -29,6 +29,16 @@
 
 ---
 
+## 运行原理（一览）
+
+<p align="center">
+  <img src="assets/readme/flow-eli5-zh-cn.svg" alt="call-agy 一句话流程 — 主 Agent 转发到官方 agy 无头模式，agy 执行后返回 handoff" width="100%">
+</p>
+
+*只需一句话，主 Agent 即可将任务委托给官方无头 `agy` 并在原生沙箱中自主执行，返回整洁的 Markdown 移交报告。*
+
+---
+
 ## 快速上手
 
 ### 1. 前提准备（仅需 3 步）

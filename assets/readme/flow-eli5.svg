@@ -1,0 +1,346 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">How call-agy Works — Plain-Language Flow</title>
+  <desc id="desc">An ELI5 explanation of call-agy: one natural language prompt from the host agent forwards directly to official headless agy CLI, executes securely inside the official sandbox, and returns a structured handoff.</desc>
+
+  <defs>
+    <!-- Background Canvas Gradient -->
+    <linearGradient id="bg-grad-eli5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B0D14"/>
+      <stop offset="45%" stop-color="#0E121E"/>
+      <stop offset="100%" stop-color="#07080D"/>
+    </linearGradient>
+
+    <!-- Radial Glows -->
+    <radialGradient id="glow-purple" cx="18%" cy="30%" r="42%">
+      <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow-blue" cx="50%" cy="45%" r="45%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow-green" cx="82%" cy="60%" r="42%">
+      <stop offset="0%" stop-color="#10B981" stop-opacity="0.13"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Card Gradients -->
+    <linearGradient id="card-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#161925"/>
+      <stop offset="100%" stop-color="#0F1119"/>
+    </linearGradient>
+    <linearGradient id="inner-box-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1C2030"/>
+      <stop offset="100%" stop-color="#121522"/>
+    </linearGradient>
+
+    <!-- Accent Top Bars -->
+    <linearGradient id="bar-step1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C084FC"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="bar-step2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#6366F1"/>
+    </linearGradient>
+    <linearGradient id="bar-step3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#22D3EE"/>
+      <stop offset="100%" stop-color="#0284C7"/>
+    </linearGradient>
+    <linearGradient id="bar-step4" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+    <linearGradient id="bar-step5" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#34D399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+
+    <!-- Shield Background Gradient -->
+    <linearGradient id="shield-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0C241B"/>
+      <stop offset="100%" stop-color="#081812"/>
+    </linearGradient>
+
+    <!-- Subtle Tech Grid -->
+    <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1E2435" stroke-width="0.75" opacity="0.35"/>
+    </pattern>
+
+    <!-- Flow Arrow Marker -->
+    <marker id="flow-arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#64748B" />
+    </marker>
+  </defs>
+
+  <!-- Canvas Outer Container -->
+  <rect x="1" y="1" width="1198" height="418" rx="24" fill="url(#bg-grad-eli5)" stroke="#24293A" stroke-width="1.5"/>
+  <rect x="1" y="1" width="1198" height="418" rx="24" fill="url(#grid-pattern)"/>
+  <rect x="1" y="1" width="1198" height="418" rx="24" fill="url(#glow-purple)"/>
+  <rect x="1" y="1" width="1198" height="418" rx="24" fill="url(#glow-blue)"/>
+  <rect x="1" y="1" width="1198" height="418" rx="24" fill="url(#glow-green)"/>
+
+  <!-- Top Edge Subtle Highlight -->
+  <path d="M 28 1 L 1172 1" stroke="#3D465E" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
+
+  <!-- ==================== HEADER ROW ==================== -->
+  <g id="header-row" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+    <!-- Left Category / Proposition Badge -->
+    <g transform="translate(44, 24)">
+      <rect width="360" height="34" rx="17" fill="#141722" stroke="#2B3144" stroke-width="1"/>
+      <!-- Lightning Icon -->
+      <path d="M18 9 L12 18 L17 18 L15 25 L22 15 L17 15 Z" fill="#A78BFA"/>
+      <text x="32" y="22" fill="#E2E8F0" font-size="12.5" font-weight="700" letter-spacing="1.1">HOW IT WORKS · ONE PROMPT IS ALL IT TAKES</text>
+    </g>
+
+    <!-- Right Security Trust Badge -->
+    <g transform="translate(684, 24)">
+      <rect width="472" height="34" rx="17" fill="url(#shield-bg)" stroke="#174B38" stroke-width="1.2"/>
+      <!-- Shield Icon -->
+      <g transform="translate(14, 8)">
+        <path d="M9 1 L2 4 V9 C2 13.5 5 17 9 18 C13 17 16 13.5 16 9 V4 L9 1 Z" fill="none" stroke="#34D399" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="M6 9.5 L8 11.5 L12 6.5" fill="none" stroke="#34D399" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <text x="38" y="22" fill="#6EE7B7" font-size="12.5" font-weight="750" letter-spacing="0.5">100% OFFICIAL AGY CLI · ZERO CREDENTIAL LEAKS · NO PROXY</text>
+    </g>
+  </g>
+
+  <!-- ==================== 5-STEP WORKFLOW CARDS ==================== -->
+
+  <!-- ==================== STEP 1: Prompt Your Agent ==================== -->
+  <g id="step-1" transform="translate(44, 76)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+    <!-- Card Frame -->
+    <rect width="202" height="316" rx="16" fill="url(#card-grad)" stroke="#262B3D" stroke-width="1.2"/>
+    <rect width="202" height="4" rx="2" fill="url(#bar-step1)"/>
+
+    <!-- Step Badge & Icon -->
+    <rect x="14" y="14" width="58" height="22" rx="6" fill="#1B1E2D" stroke="#31384E" stroke-width="1"/>
+    <text x="43" y="29" text-anchor="middle" fill="#C084FC" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11" font-weight="700">STEP 1</text>
+    
+    <!-- User Chat Icon -->
+    <g transform="translate(162, 14)">
+      <circle cx="12" cy="11" r="13" fill="#1E1C2E" stroke="#3D3459" stroke-width="1"/>
+      <path d="M8 8 H16 C17.1 8 18 8.9 18 10 V14 C18 15.1 17.1 16 16 16 H10 L7 19 V10 C7 8.9 7.9 8 8 8 Z" fill="none" stroke="#C084FC" stroke-width="1.4" stroke-linejoin="round"/>
+    </g>
+
+    <!-- Card Title -->
+    <text x="14" y="66" fill="#FFFFFF" font-size="18.5" font-weight="750" letter-spacing="-0.3">1. One Prompt</text>
+
+    <!-- Visual Interactive Box -->
+    <g transform="translate(12, 80)">
+      <rect width="178" height="116" rx="10" fill="url(#inner-box-grad)" stroke="#272D40" stroke-width="1"/>
+      <!-- Host Chat Bubble -->
+      <rect x="10" y="12" width="158" height="60" rx="8" fill="#241E38" stroke="#48386E" stroke-width="1"/>
+      <text x="18" y="32" fill="#E9D5FF" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12" font-weight="700">"Use $call-agy to</text>
+      <text x="18" y="50" fill="#DDD6FE" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12" font-weight="700">review this diff"</text>
+      <circle cx="148" cy="50" r="3" fill="#C084FC"/>
+      
+      <!-- Mini Pill -->
+      <rect x="10" y="80" width="158" height="24" rx="6" fill="#161826" stroke="#2D3349" stroke-width="1"/>
+      <text x="89" y="96" text-anchor="middle" fill="#A78BFA" font-size="11" font-weight="650">Host Agent Chat Dialog</text>
+    </g>
+
+    <!-- Explanation Text -->
+    <line x1="14" y1="210" x2="188" y2="210" stroke="#1E2333" stroke-width="1"/>
+    <text x="14" y="234" fill="#F1F5F9" font-size="13.5" font-weight="600">Plain Natural Language</text>
+    <text x="14" y="254" fill="#94A3B8" font-size="12.5" font-weight="400">Tell your daily AI Agent</text>
+    <text x="14" y="272" fill="#94A3B8" font-size="12.5" font-weight="400">what to do in 1 sentence.</text>
+
+    <!-- Bottom Tag -->
+    <text x="14" y="300" fill="#A78BFA" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="700">→ Zero workflow shift</text>
+  </g>
+
+  <!-- Arrow 1 -> 2 -->
+  <g transform="translate(248, 222)">
+    <line x1="0" y1="0" x2="21" y2="0" stroke="#475569" stroke-width="1.8" marker-end="url(#flow-arrow)" stroke-dasharray="3 2"/>
+  </g>
+
+  <!-- ==================== STEP 2: Official CLI Forward ==================== -->
+  <g id="step-2" transform="translate(273, 76)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+    <!-- Card Frame -->
+    <rect width="202" height="316" rx="16" fill="url(#card-grad)" stroke="#262B3D" stroke-width="1.2"/>
+    <rect width="202" height="4" rx="2" fill="url(#bar-step2)"/>
+
+    <!-- Step Badge & Icon -->
+    <rect x="14" y="14" width="58" height="22" rx="6" fill="#161F2E" stroke="#253852" stroke-width="1"/>
+    <text x="43" y="29" text-anchor="middle" fill="#38BDF8" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11" font-weight="700">STEP 2</text>
+    
+    <!-- Forward/Router Icon -->
+    <g transform="translate(162, 14)">
+      <circle cx="12" cy="11" r="13" fill="#152233" stroke="#224566" stroke-width="1"/>
+      <path d="M7 11 L14 11 M11 7 L15 11 L11 15" fill="none" stroke="#38BDF8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <!-- Card Title -->
+    <text x="14" y="66" fill="#FFFFFF" font-size="18.5" font-weight="750" letter-spacing="-0.3">2. CLI Forward</text>
+
+    <!-- Visual Interactive Box -->
+    <g transform="translate(12, 80)">
+      <rect width="178" height="116" rx="10" fill="url(#inner-box-grad)" stroke="#272D40" stroke-width="1"/>
+      <!-- CLI Box -->
+      <rect x="10" y="12" width="158" height="60" rx="8" fill="#111B28" stroke="#1D3E5E" stroke-width="1"/>
+      <text x="18" y="32" fill="#38BDF8" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12.5" font-weight="750">agy --print</text>
+      <text x="18" y="50" fill="#93C5FD" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11" font-weight="600">"review this diff"</text>
+      <circle cx="148" cy="30" r="3" fill="#34D399"/>
+
+      <!-- Equivalence Pill -->
+      <rect x="10" y="80" width="158" height="24" rx="6" fill="#0E2233" stroke="#1A4366" stroke-width="1"/>
+      <text x="89" y="96" text-anchor="middle" fill="#7DD3FC" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" font-weight="700">= Official agy -P</text>
+    </g>
+
+    <!-- Explanation Text -->
+    <line x1="14" y1="210" x2="188" y2="210" stroke="#1E2333" stroke-width="1"/>
+    <text x="14" y="234" fill="#F1F5F9" font-size="13.5" font-weight="600">Headless CLI Call</text>
+    <text x="14" y="254" fill="#94A3B8" font-size="12.5" font-weight="400">Host forwards instruction</text>
+    <text x="14" y="272" fill="#94A3B8" font-size="12.5" font-weight="400">directly to official agy CLI.</text>
+
+    <!-- Bottom Tag -->
+    <text x="14" y="300" fill="#38BDF8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="700">→ No secret extraction</text>
+  </g>
+
+  <!-- Arrow 2 -> 3 -->
+  <g transform="translate(477, 222)">
+    <line x1="0" y1="0" x2="21" y2="0" stroke="#475569" stroke-width="1.8" marker-end="url(#flow-arrow)" stroke-dasharray="3 2"/>
+  </g>
+
+  <!-- ==================== STEP 3: Official Sandbox Execution ==================== -->
+  <g id="step-3" transform="translate(502, 76)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+    <!-- Card Frame -->
+    <rect width="202" height="316" rx="16" fill="url(#card-grad)" stroke="#262B3D" stroke-width="1.2"/>
+    <rect width="202" height="4" rx="2" fill="url(#bar-step3)"/>
+
+    <!-- Step Badge & Icon -->
+    <rect x="14" y="14" width="58" height="22" rx="6" fill="#11242E" stroke="#1E4759" stroke-width="1"/>
+    <text x="43" y="29" text-anchor="middle" fill="#22D3EE" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11" font-weight="700">STEP 3</text>
+    
+    <!-- Engine/Gear Icon -->
+    <g transform="translate(162, 14)">
+      <circle cx="12" cy="11" r="13" fill="#102530" stroke="#194B5E" stroke-width="1"/>
+      <path d="M12 7 V15 M8 11 H16" stroke="#22D3EE" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="12" cy="11" r="5" fill="none" stroke="#22D3EE" stroke-width="1.3"/>
+    </g>
+
+    <!-- Card Title -->
+    <text x="14" y="66" fill="#FFFFFF" font-size="18.5" font-weight="750" letter-spacing="-0.3">3. Official Run</text>
+
+    <!-- Visual Interactive Box -->
+    <g transform="translate(12, 80)">
+      <rect width="178" height="116" rx="10" fill="url(#inner-box-grad)" stroke="#272D40" stroke-width="1"/>
+      <!-- Sandbox Box -->
+      <rect x="10" y="12" width="158" height="60" rx="8" fill="#0C2029" stroke="#154B5C" stroke-width="1"/>
+      <text x="18" y="32" fill="#22D3EE" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12" font-weight="750">⚡ agy engine</text>
+      
+      <!-- Status pill with pulse dot -->
+      <circle cx="22" cy="48" r="3.5" fill="#34D399"/>
+      <text x="32" y="52" fill="#6EE7B7" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="10.5" font-weight="700">Sandbox Active</text>
+
+      <!-- Sub text -->
+      <rect x="10" y="80" width="158" height="24" rx="6" fill="#0B1A24" stroke="#16394C" stroke-width="1"/>
+      <text x="89" y="96" text-anchor="middle" fill="#67E8F9" font-size="11" font-weight="650">Official Sandbox &amp; Rules</text>
+    </g>
+
+    <!-- Explanation Text -->
+    <line x1="14" y1="210" x2="188" y2="210" stroke="#1E2333" stroke-width="1"/>
+    <text x="14" y="234" fill="#F1F5F9" font-size="13.5" font-weight="600">Autonomous Coding</text>
+    <text x="14" y="254" fill="#94A3B8" font-size="12.5" font-weight="400">Antigravity handles heavy</text>
+    <text x="14" y="272" fill="#94A3B8" font-size="12.5" font-weight="400">analysis, diffs &amp; tests.</text>
+
+    <!-- Bottom Tag -->
+    <text x="14" y="300" fill="#22D3EE" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="700">→ Native AGY sandbox</text>
+  </g>
+
+  <!-- Arrow 3 -> 4 -->
+  <g transform="translate(706, 222)">
+    <line x1="0" y1="0" x2="21" y2="0" stroke="#475569" stroke-width="1.8" marker-end="url(#flow-arrow)" stroke-dasharray="3 2"/>
+  </g>
+
+  <!-- ==================== STEP 4: Return Markdown Handoff ==================== -->
+  <g id="step-4" transform="translate(731, 76)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+    <!-- Card Frame -->
+    <rect width="202" height="316" rx="16" fill="url(#card-grad)" stroke="#262B3D" stroke-width="1.2"/>
+    <rect width="202" height="4" rx="2" fill="url(#bar-step4)"/>
+
+    <!-- Step Badge & Icon -->
+    <rect x="14" y="14" width="58" height="22" rx="6" fill="#291F14" stroke="#4E3B1C" stroke-width="1"/>
+    <text x="43" y="29" text-anchor="middle" fill="#FBBF24" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11" font-weight="700">STEP 4</text>
+    
+    <!-- Document Icon -->
+    <g transform="translate(162, 14)">
+      <circle cx="12" cy="11" r="13" fill="#291F12" stroke="#543C1B" stroke-width="1"/>
+      <path d="M8 7 H14 L17 10 V16 H8 Z" fill="none" stroke="#FBBF24" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M14 7 V10 H17" fill="none" stroke="#FBBF24" stroke-width="1.4"/>
+    </g>
+
+    <!-- Card Title -->
+    <text x="14" y="66" fill="#FFFFFF" font-size="18.5" font-weight="750" letter-spacing="-0.3">4. Return Handoff</text>
+
+    <!-- Visual Interactive Box -->
+    <g transform="translate(12, 80)">
+      <rect width="178" height="116" rx="10" fill="url(#inner-box-grad)" stroke="#272D40" stroke-width="1"/>
+      <!-- File Delivery Box -->
+      <rect x="10" y="12" width="158" height="60" rx="8" fill="#261C10" stroke="#523B17" stroke-width="1"/>
+      <text x="18" y="32" fill="#FBBF24" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12.5" font-weight="750">📄 handoff.md</text>
+      <text x="18" y="50" fill="#FDE68A" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11" font-weight="600">+ diff &amp; session_id</text>
+
+      <!-- Markdown Pill -->
+      <rect x="10" y="80" width="158" height="24" rx="6" fill="#1C150C" stroke="#3D2B11" stroke-width="1"/>
+      <text x="89" y="96" text-anchor="middle" fill="#F59E0B" font-size="11" font-weight="650">Structured Report</text>
+    </g>
+
+    <!-- Explanation Text -->
+    <line x1="14" y1="210" x2="188" y2="210" stroke="#1E2333" stroke-width="1"/>
+    <text x="14" y="234" fill="#F1F5F9" font-size="13.5" font-weight="600">Clean Handoff Report</text>
+    <text x="14" y="254" fill="#94A3B8" font-size="12.5" font-weight="400">Returns structured notes,</text>
+    <text x="14" y="272" fill="#94A3B8" font-size="12.5" font-weight="400">verified diffs &amp; session ID.</text>
+
+    <!-- Bottom Tag -->
+    <text x="14" y="300" fill="#FBBF24" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="700">→ Resumable context</text>
+  </g>
+
+  <!-- Arrow 4 -> 5 -->
+  <g transform="translate(935, 222)">
+    <line x1="0" y1="0" x2="21" y2="0" stroke="#475569" stroke-width="1.8" marker-end="url(#flow-arrow)" stroke-dasharray="3 2"/>
+  </g>
+
+  <!-- ==================== STEP 5: Host Summarizes for You ==================== -->
+  <g id="step-5" transform="translate(960, 76)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+    <!-- Card Frame -->
+    <rect width="202" height="316" rx="16" fill="url(#card-grad)" stroke="#262B3D" stroke-width="1.2"/>
+    <rect width="202" height="4" rx="2" fill="url(#bar-step5)"/>
+
+    <!-- Step Badge & Icon -->
+    <rect x="14" y="14" width="58" height="22" rx="6" fill="#10251C" stroke="#1D4A36" stroke-width="1"/>
+    <text x="43" y="29" text-anchor="middle" fill="#34D399" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11" font-weight="700">STEP 5</text>
+    
+    <!-- Sparkle / Check Icon -->
+    <g transform="translate(162, 14)">
+      <circle cx="12" cy="11" r="13" fill="#0E241B" stroke="#1A4A35" stroke-width="1"/>
+      <path d="M8 11.5 L11 14.5 L16 8.5" fill="none" stroke="#34D399" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <!-- Card Title -->
+    <text x="14" y="66" fill="#FFFFFF" font-size="18.5" font-weight="750" letter-spacing="-0.3">5. Summarize</text>
+
+    <!-- Visual Interactive Box -->
+    <g transform="translate(12, 80)">
+      <rect width="178" height="116" rx="10" fill="url(#inner-box-grad)" stroke="#272D40" stroke-width="1"/>
+      <!-- Host Deliver Box -->
+      <rect x="10" y="12" width="158" height="60" rx="8" fill="#0C2218" stroke="#184D34" stroke-width="1"/>
+      <text x="18" y="32" fill="#34D399" font-size="12" font-weight="750">✨ Done &amp; Verified</text>
+      <text x="18" y="50" fill="#A7F3D0" font-size="11" font-weight="600">Summary &amp; Diffs Ready</text>
+
+      <!-- Continue Pill -->
+      <rect x="10" y="80" width="158" height="24" rx="6" fill="#081A12" stroke="#133C29" stroke-width="1"/>
+      <text x="89" y="96" text-anchor="middle" fill="#6EE7B7" font-size="11" font-weight="650">Ready For Next Step</text>
+    </g>
+
+    <!-- Explanation Text -->
+    <line x1="14" y1="210" x2="188" y2="210" stroke="#1E2333" stroke-width="1"/>
+    <text x="14" y="234" fill="#F1F5F9" font-size="13.5" font-weight="600">Present Clean Results</text>
+    <text x="14" y="254" fill="#94A3B8" font-size="12.5" font-weight="400">Host synthesizes findings</text>
+    <text x="14" y="272" fill="#94A3B8" font-size="12.5" font-weight="400">and reports straight to you.</text>
+
+    <!-- Bottom Tag -->
+    <text x="14" y="300" fill="#34D399" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="700">→ Ready for review</text>
+  </g>
+</svg>

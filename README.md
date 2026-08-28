@@ -29,6 +29,16 @@
 
 ---
 
+## How It Works (At a Glance)
+
+<p align="center">
+  <img src="assets/readme/flow-eli5.svg" alt="How call-agy works in one prompt — host Agent forwards to official agy headless mode, agy executes, returns handoff" width="100%">
+</p>
+
+*One prompt delegates demanding tasks to the official headless `agy` CLI inside its native sandbox, returning structured Markdown handoffs back to your chat.*
+
+---
+
 ## Quick Start
 
 ### 1. Prerequisites (3 Simple Steps)
