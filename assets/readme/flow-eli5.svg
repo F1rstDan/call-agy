@@ -10,43 +10,57 @@
       <stop offset="100%" stop-color="#07080D"/>
     </linearGradient>
 
-    <!-- Radial Glows -->
-    <radialGradient id="glow-user" cx="14%" cy="35%" r="40%">
-      <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.22"/>
+    <!-- Radial Glows for Ambience -->
+    <radialGradient id="glow-user" cx="15%" cy="38%" r="42%">
+      <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.24"/>
+      <stop offset="60%" stop-color="#8B5CF6" stop-opacity="0.04"/>
       <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="glow-auto" cx="70%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.10"/>
+    <radialGradient id="glow-auto" cx="68%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.12"/>
+      <stop offset="50%" stop-color="#0284C7" stop-opacity="0.03"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow-done" cx="92%" cy="65%" r="35%">
+      <stop offset="0%" stop-color="#10B981" stop-opacity="0.14"/>
       <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
     </radialGradient>
 
     <!-- Subtle Tech Grid -->
     <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
-      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1D2232" stroke-width="0.75" opacity="0.35"/>
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1C2234" stroke-width="0.75" opacity="0.32"/>
     </pattern>
 
     <!-- Step 1 User Card Gradient -->
     <linearGradient id="user-card-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#1E1B30"/>
-      <stop offset="100%" stop-color="#12101E"/>
+      <stop offset="0%" stop-color="#1E1934"/>
+      <stop offset="100%" stop-color="#110E1E"/>
+    </linearGradient>
+    <linearGradient id="user-inner-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#261E40"/>
+      <stop offset="100%" stop-color="#18132B"/>
+    </linearGradient>
+    <linearGradient id="user-top-bar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C084FC"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
     </linearGradient>
 
     <!-- Auto Container Gradient -->
     <linearGradient id="auto-container-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#101420"/>
-      <stop offset="100%" stop-color="#0B0E17"/>
+      <stop offset="0%" stop-color="#0F1422"/>
+      <stop offset="100%" stop-color="#090C15"/>
     </linearGradient>
 
     <!-- Mini Step Card Gradient -->
     <linearGradient id="step-card-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#161B28"/>
-      <stop offset="100%" stop-color="#10131D"/>
+      <stop offset="0%" stop-color="#151A27"/>
+      <stop offset="100%" stop-color="#0E121B"/>
     </linearGradient>
 
     <!-- Shield Background Gradient -->
     <linearGradient id="badge-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#0E271D"/>
-      <stop offset="100%" stop-color="#0A1C15"/>
+      <stop offset="0%" stop-color="#0C251C"/>
+      <stop offset="100%" stop-color="#081A13"/>
     </linearGradient>
 
     <!-- Flow Arrow Marker -->
@@ -59,26 +73,27 @@
   </defs>
 
   <!-- Outer Canvas -->
-  <rect x="1" y="1" width="1198" height="418" rx="24" fill="url(#bg-grad-eli5)" stroke="#24293A" stroke-width="1.5"/>
+  <rect x="1" y="1" width="1198" height="418" rx="24" fill="url(#bg-grad-eli5)" stroke="#252B3E" stroke-width="1.5"/>
   <rect x="1" y="1" width="1198" height="418" rx="24" fill="url(#grid-pattern)"/>
   <rect x="1" y="1" width="1198" height="418" rx="24" fill="url(#glow-user)"/>
   <rect x="1" y="1" width="1198" height="418" rx="24" fill="url(#glow-auto)"/>
+  <rect x="1" y="1" width="1198" height="418" rx="24" fill="url(#glow-done)"/>
 
-  <!-- Top Highlight -->
-  <path d="M 28 1 L 1172 1" stroke="#3D465E" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
+  <!-- Top Subtle Highlight Line -->
+  <path d="M 28 1 L 1172 1" stroke="#3E4760" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
 
   <!-- ==================== HEADER ROW ==================== -->
   <g id="header" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
     <!-- Left Proposition Badge -->
     <g transform="translate(44, 24)">
-      <rect width="256" height="34" rx="17" fill="#141722" stroke="#2B3144" stroke-width="1"/>
+      <rect width="248" height="34" rx="17" fill="#141826" stroke="#2B344C" stroke-width="1"/>
       <path d="M16 10 L11 18 L16 18 L14 24 L20 16 L16 16 Z" fill="#A78BFA"/>
       <text x="30" y="22" fill="#E2E8F0" font-size="12" font-weight="700" letter-spacing="1">ELI5 FLOW · 1 PROMPT ONLY</text>
     </g>
 
-    <!-- Right Shield / Equivalence Badge (User required) -->
-    <g transform="translate(776, 24)">
-      <rect width="380" height="34" rx="17" fill="url(#badge-grad)" stroke="#1F6347" stroke-width="1.2"/>
+    <!-- Right Shield / Equivalence Badge -->
+    <g transform="translate(761, 24)">
+      <rect width="395" height="34" rx="17" fill="url(#badge-grad)" stroke="#1C563D" stroke-width="1.2"/>
       <!-- Shield Icon -->
       <g transform="translate(14, 8)">
         <path d="M9 1 L2 4 V9 C2 13.5 5 17 9 18 C13 17 16 13.5 16 9 V4 L9 1 Z" fill="none" stroke="#34D399" stroke-width="1.6" stroke-linejoin="round"/>
@@ -86,7 +101,7 @@
       </g>
       <!-- Equivalence Text -->
       <text x="38" y="22" fill="#86EFAC" font-size="13" font-weight="650" letter-spacing="0.2">
-        This SKILL = official <tspan font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="750" fill="#34D399">agy -p "..."</tspan>
+        This SKILL = official <tspan font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="750" fill="#34D399">agy -p "..."</tspan> · Risk-free
       </text>
     </g>
   </g>
@@ -96,88 +111,83 @@
   <!-- ===== STEP 1 (LEFT): YOU DO THIS (HIGHLIGHTED) ===== -->
   <g id="step-1-user" transform="translate(44, 76)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
     <!-- Highlighted Frame with Glow Border -->
-    <rect width="216" height="316" rx="16" fill="url(#user-card-grad)" stroke="#8B5CF6" stroke-width="1.8"/>
+    <rect width="218" height="316" rx="16" fill="url(#user-card-grad)" stroke="#8B5CF6" stroke-width="1.8"/>
     <!-- Top Accent Bar -->
-    <rect width="216" height="5" rx="2" fill="#A78BFA"/>
+    <rect width="218" height="5" rx="2.5" fill="url(#user-top-bar)"/>
 
-    <!-- YOU DO THIS Badge -->
-    <g transform="translate(14, 14)">
-      <rect width="112" height="24" rx="6" fill="#312252" stroke="#6D43C7" stroke-width="1"/>
-      <circle cx="12" cy="12" r="3.5" fill="#C084FC"/>
-      <text x="22" y="16.5" fill="#E9D5FF" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" font-weight="800" letter-spacing="0.5">YOU DO THIS</text>
+    <!-- Step 1 Single Highlight Badge -->
+    <g transform="translate(14, 16)">
+      <rect width="152" height="24" rx="6" fill="#2E1E54" stroke="#5E3BB0" stroke-width="1"/>
+      <text x="76" y="16.5" text-anchor="middle" fill="#E9D5FF" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" font-weight="800" letter-spacing="0.3">✨ That is all you do</text>
     </g>
 
     <!-- Big Title -->
     <text x="14" y="74" fill="#FFFFFF" font-size="22" font-weight="800" letter-spacing="-0.3">You Prompt</text>
 
-    <!-- Center Big Visual: Host Chat Bubble -->
-    <g transform="translate(14, 92)">
-      <rect width="188" height="120" rx="12" fill="#261F3C" stroke="#4C357A" stroke-width="1.2"/>
+    <!-- Center Visual: Host Chat Bubble -->
+    <g transform="translate(14, 90)">
+      <rect width="190" height="122" rx="12" fill="url(#user-inner-grad)" stroke="#473275" stroke-width="1.2"/>
       
       <!-- Mini avatar & tag -->
-      <circle cx="22" cy="24" r="10" fill="#432874"/>
-      <path d="M18 22 C18 20 20 18 22 18 C24 18 26 20 26 22 M19 27 C19 25 21 24 22 24 C23 24 25 25 25 27" fill="none" stroke="#C084FC" stroke-width="1.2"/>
-      <text x="38" y="27" fill="#DDD6FE" font-size="11" font-weight="700">Host Chat</text>
+      <circle cx="22" cy="22" r="9" fill="#432874"/>
+      <path d="M18 20 C18 18.5 19.8 17 22 17 C24.2 17 26 18.5 26 20 M19 25 C19 23.5 20.5 22.5 22 22.5 C23.5 22.5 25 23.5 25 25" fill="none" stroke="#C084FC" stroke-width="1.2"/>
+      <text x="38" y="26" fill="#DDD6FE" font-size="11" font-weight="700">Host Chat</text>
 
-      <!-- User prompt string -->
-      <rect x="12" y="44" width="164" height="62" rx="8" fill="#1A142A" stroke="#372658" stroke-width="1"/>
-      <text x="20" y="66" fill="#C084FC" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12.5" font-weight="750">Use $call-agy</text>
-      <text x="20" y="86" fill="#E2E8F0" font-size="12" font-weight="500">to fix this bug...</text>
-      <circle cx="162" cy="84" r="2.5" fill="#A78BFA"/>
+      <!-- User prompt string box -->
+      <rect x="12" y="42" width="166" height="66" rx="8" fill="#18132B" stroke="#3A2760" stroke-width="1"/>
+      <text x="18" y="64" fill="#C084FC" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" font-weight="750">Use $call-agy</text>
+      <text x="18" y="85" fill="#E2E8F0" font-size="11.5" font-weight="500">to fix this bug...</text>
+      <circle cx="162" cy="83" r="2.5" fill="#A78BFA"/>
     </g>
 
     <!-- 1-Line Minimal Explanation -->
-    <text x="14" y="244" fill="#E9D5FF" font-size="13" font-weight="600">Just 1 natural sentence</text>
-    <text x="14" y="264" fill="#94A3B8" font-size="12">in your daily Agent chat</text>
-
-    <!-- Bottom Tag -->
-    <rect x="14" y="278" width="188" height="24" rx="6" fill="#191526" stroke="#2F2548" stroke-width="1"/>
-    <text x="108" y="294" text-anchor="middle" fill="#A78BFA" font-size="11" font-weight="700">✨ That is all you do</text>
+    <text x="14" y="246" fill="#EDE9FE" font-size="13" font-weight="600">May cost a few tokens</text>
+    <text x="14" y="268" fill="#94A3B8" font-size="12">in your daily Agent chat</text>
   </g>
 
   <!-- Big Transition Arrow: Prompt -> Auto Pipeline -->
-  <g transform="translate(266, 222)">
+  <g transform="translate(268, 222)">
     <line x1="0" y1="0" x2="20" y2="0" stroke="#8B5CF6" stroke-width="2.5" marker-end="url(#flow-arrow-purple)"/>
   </g>
 
   <!-- ===== STEPS 2–5 (RIGHT): FULLY AUTOMATIC PIPELINE ===== -->
   <g id="auto-pipeline" transform="translate(296, 76)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
     <!-- Auto Area Background Frame -->
-    <rect width="860" height="316" rx="16" fill="url(#auto-container-grad)" stroke="#222B3D" stroke-width="1.2"/>
+    <rect width="860" height="316" rx="16" fill="url(#auto-container-grad)" stroke="#1F293D" stroke-width="1.2"/>
 
     <!-- Top Pipeline Bar -->
-    <g transform="translate(18, 12)">
-      <rect width="824" height="28" rx="8" fill="#131B29" stroke="#1E2B42" stroke-width="1"/>
+    <g transform="translate(16, 12)">
+      <rect width="828" height="28" rx="8" fill="#141D2C" stroke="#1F2E47" stroke-width="1"/>
       <circle cx="18" cy="14" r="4" fill="#38BDF8"/>
       <circle cx="18" cy="14" r="7" fill="#38BDF8" opacity="0.25"/>
       <text x="32" y="19" fill="#93C5FD" font-size="12" font-weight="750" letter-spacing="0.8">🤖 FULLY AUTOMATIC PIPELINE · ZERO EFFORT FROM YOU</text>
     </g>
 
     <!-- ================= Step 2: Auto Forward ================= -->
-    <g id="mini-step-2" transform="translate(18, 50)">
-      <rect width="190" height="252" rx="12" fill="url(#step-card-grad)" stroke="#232C3E" stroke-width="1"/>
-      <rect width="190" height="3" rx="1.5" fill="#38BDF8"/>
+    <g id="mini-step-2" transform="translate(16, 50)">
+      <rect width="192" height="252" rx="12" fill="url(#step-card-grad)" stroke="#242E42" stroke-width="1"/>
+      <rect width="192" height="3" rx="1.5" fill="#38BDF8"/>
       
       <!-- Step Badge -->
       <rect x="12" y="12" width="52" height="20" rx="5" fill="#152438" stroke="#1F3D61" stroke-width="1"/>
       <text x="38" y="26" text-anchor="middle" fill="#38BDF8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="750">STEP 2</text>
       
       <!-- Auto Tag -->
-      <text x="178" y="26" text-anchor="end" fill="#64748B" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" font-weight="700">AUTO</text>
+      <text x="180" y="26" text-anchor="end" fill="#64748B" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" font-weight="700">AUTO</text>
 
       <!-- Title -->
       <text x="12" y="58" fill="#FFFFFF" font-size="19" font-weight="750">Auto Forward</text>
 
       <!-- Big Center Visual Icon -->
       <g transform="translate(12, 72)">
-        <rect width="166" height="110" rx="10" fill="#0F1622" stroke="#1C2C42" stroke-width="1"/>
+        <rect width="168" height="110" rx="10" fill="#0E1624" stroke="#1C2D44" stroke-width="1"/>
         <!-- Fast Arrow Icon -->
-        <circle cx="83" cy="38" r="22" fill="#132338" stroke="#1E446B" stroke-width="1.2"/>
-        <path d="M72 38 L92 38 M85 31 L93 38 L85 45" fill="none" stroke="#38BDF8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="84" cy="38" r="22" fill="#132338" stroke="#1E446B" stroke-width="1.2"/>
+        <path d="M73 38 L93 38 M86 31 L94 38 L86 45" fill="none" stroke="#38BDF8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
         
         <!-- Command Badge -->
-        <rect x="14" y="72" width="138" height="26" rx="6" fill="#0A1018" stroke="#162B44" stroke-width="1"/>
-        <text x="83" y="89" text-anchor="middle" fill="#7DD3FC" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="700">agy --print</text>
+        <rect x="14" y="72" width="140" height="26" rx="6" fill="#0A101A" stroke="#162B44" stroke-width="1"/>
+        <text x="84" y="89" text-anchor="middle" fill="#7DD3FC" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="700">agy --print</text>
       </g>
 
       <!-- 1-Line Explanation -->
@@ -186,35 +196,35 @@
     </g>
 
     <!-- Arrow 2 -> 3 -->
-    <g transform="translate(212, 175)">
-      <line x1="0" y1="0" x2="16" y2="0" stroke="#334155" stroke-width="1.8" stroke-dasharray="3 2" marker-end="url(#flow-arrow-gray)"/>
+    <g transform="translate(214, 175)">
+      <line x1="0" y1="0" x2="14" y2="0" stroke="#334155" stroke-width="1.8" stroke-dasharray="3 2" marker-end="url(#flow-arrow-gray)"/>
     </g>
 
     <!-- ================= Step 3: Auto Run ================= -->
-    <g id="mini-step-3" transform="translate(230, 50)">
-      <rect width="190" height="252" rx="12" fill="url(#step-card-grad)" stroke="#232C3E" stroke-width="1"/>
-      <rect width="190" height="3" rx="1.5" fill="#22D3EE"/>
+    <g id="mini-step-3" transform="translate(228, 50)">
+      <rect width="192" height="252" rx="12" fill="url(#step-card-grad)" stroke="#1E3748" stroke-width="1"/>
+      <rect width="192" height="3" rx="1.5" fill="#22D3EE"/>
 
       <!-- Step Badge -->
       <rect x="12" y="12" width="52" height="20" rx="5" fill="#102936" stroke="#18485E" stroke-width="1"/>
       <text x="38" y="26" text-anchor="middle" fill="#22D3EE" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="750">STEP 3</text>
       
       <!-- Auto Tag -->
-      <text x="178" y="26" text-anchor="end" fill="#64748B" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" font-weight="700">AUTO</text>
+      <text x="180" y="26" text-anchor="end" fill="#64748B" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" font-weight="700">AUTO</text>
 
       <!-- Title -->
       <text x="12" y="58" fill="#FFFFFF" font-size="19" font-weight="750">Auto Run</text>
 
       <!-- Big Center Visual Icon -->
       <g transform="translate(12, 72)">
-        <rect width="166" height="110" rx="10" fill="#0C1B24" stroke="#173B4D" stroke-width="1"/>
+        <rect width="168" height="110" rx="10" fill="#0B1A24" stroke="#163C4E" stroke-width="1"/>
         <!-- Gear / Sandbox Icon -->
-        <circle cx="83" cy="38" r="22" fill="#0F2836" stroke="#19546E" stroke-width="1.2"/>
-        <path d="M83 26 V50 M71 38 H95" stroke="#22D3EE" stroke-width="2" stroke-linecap="round"/>
-        <circle cx="83" cy="38" r="8" fill="#0C1B24" stroke="#22D3EE" stroke-width="1.8"/>
+        <circle cx="84" cy="38" r="22" fill="#0F2836" stroke="#19546E" stroke-width="1.2"/>
+        <path d="M84 26 V50 M72 38 H96" stroke="#22D3EE" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="84" cy="38" r="8" fill="#0B1A24" stroke="#22D3EE" stroke-width="1.8"/>
 
         <!-- Sandbox Active Badge -->
-        <rect x="14" y="72" width="138" height="26" rx="6" fill="#08141C" stroke="#13384A" stroke-width="1"/>
+        <rect x="14" y="72" width="140" height="26" rx="6" fill="#08141C" stroke="#13384A" stroke-width="1"/>
         <circle cx="28" cy="85" r="3" fill="#34D399"/>
         <text x="86" y="89" text-anchor="middle" fill="#67E8F9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" font-weight="700">agy sandbox</text>
       </g>
@@ -225,36 +235,36 @@
     </g>
 
     <!-- Arrow 3 -> 4 -->
-    <g transform="translate(424, 175)">
-      <line x1="0" y1="0" x2="16" y2="0" stroke="#334155" stroke-width="1.8" stroke-dasharray="3 2" marker-end="url(#flow-arrow-gray)"/>
+    <g transform="translate(426, 175)">
+      <line x1="0" y1="0" x2="14" y2="0" stroke="#334155" stroke-width="1.8" stroke-dasharray="3 2" marker-end="url(#flow-arrow-gray)"/>
     </g>
 
     <!-- ================= Step 4: Auto Handoff ================= -->
-    <g id="mini-step-4" transform="translate(442, 50)">
-      <rect width="190" height="252" rx="12" fill="url(#step-card-grad)" stroke="#232C3E" stroke-width="1"/>
-      <rect width="190" height="3" rx="1.5" fill="#FBBF24"/>
+    <g id="mini-step-4" transform="translate(440, 50)">
+      <rect width="192" height="252" rx="12" fill="url(#step-card-grad)" stroke="#382E1C" stroke-width="1"/>
+      <rect width="192" height="3" rx="1.5" fill="#FBBF24"/>
 
       <!-- Step Badge -->
       <rect x="12" y="12" width="52" height="20" rx="5" fill="#2E2413" stroke="#5C451D" stroke-width="1"/>
       <text x="38" y="26" text-anchor="middle" fill="#FBBF24" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="750">STEP 4</text>
       
       <!-- Auto Tag -->
-      <text x="178" y="26" text-anchor="end" fill="#64748B" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" font-weight="700">AUTO</text>
+      <text x="180" y="26" text-anchor="end" fill="#64748B" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" font-weight="700">AUTO</text>
 
       <!-- Title -->
       <text x="12" y="58" fill="#FFFFFF" font-size="19" font-weight="750">Auto Handoff</text>
 
       <!-- Big Center Visual Icon -->
       <g transform="translate(12, 72)">
-        <rect width="166" height="110" rx="10" fill="#1C170D" stroke="#3D3016" stroke-width="1"/>
+        <rect width="168" height="110" rx="10" fill="#1A160E" stroke="#3D3016" stroke-width="1"/>
         <!-- Doc Icon -->
-        <circle cx="83" cy="38" r="22" fill="#2A200E" stroke="#5C4215" stroke-width="1.2"/>
-        <path d="M75 28 H86 L91 33 V48 H75 Z" fill="none" stroke="#FBBF24" stroke-width="1.8" stroke-linejoin="round"/>
-        <path d="M86 28 V33 H91" fill="none" stroke="#FBBF24" stroke-width="1.6"/>
+        <circle cx="84" cy="38" r="22" fill="#2A200E" stroke="#5C4215" stroke-width="1.2"/>
+        <path d="M76 28 H87 L92 33 V48 H76 Z" fill="none" stroke="#FBBF24" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M87 28 V33 H92" fill="none" stroke="#FBBF24" stroke-width="1.6"/>
 
         <!-- Handoff File Badge -->
-        <rect x="14" y="72" width="138" height="26" rx="6" fill="#140E06" stroke="#33240D" stroke-width="1"/>
-        <text x="83" y="89" text-anchor="middle" fill="#FDE68A" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="750">handoff.md</text>
+        <rect x="14" y="72" width="140" height="26" rx="6" fill="#140E06" stroke="#33240D" stroke-width="1"/>
+        <text x="84" y="89" text-anchor="middle" fill="#FDE68A" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="750">handoff.md</text>
       </g>
 
       <!-- 1-Line Explanation -->
@@ -263,35 +273,35 @@
     </g>
 
     <!-- Arrow 4 -> 5 -->
-    <g transform="translate(636, 175)">
-      <line x1="0" y1="0" x2="16" y2="0" stroke="#334155" stroke-width="1.8" stroke-dasharray="3 2" marker-end="url(#flow-arrow-gray)"/>
+    <g transform="translate(638, 175)">
+      <line x1="0" y1="0" x2="14" y2="0" stroke="#334155" stroke-width="1.8" stroke-dasharray="3 2" marker-end="url(#flow-arrow-gray)"/>
     </g>
 
     <!-- ================= Step 5: Done & See Results ================= -->
-    <g id="mini-step-5" transform="translate(654, 50)">
-      <rect width="190" height="252" rx="12" fill="url(#step-card-grad)" stroke="#232C3E" stroke-width="1"/>
-      <rect width="190" height="3" rx="1.5" fill="#34D399"/>
+    <g id="mini-step-5" transform="translate(652, 50)">
+      <rect width="192" height="252" rx="12" fill="url(#step-card-grad)" stroke="#1C4B35" stroke-width="1"/>
+      <rect width="192" height="3" rx="1.5" fill="#34D399"/>
 
       <!-- Step Badge -->
       <rect x="12" y="12" width="52" height="20" rx="5" fill="#122A1E" stroke="#1E523A" stroke-width="1"/>
       <text x="38" y="26" text-anchor="middle" fill="#34D399" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="750">STEP 5</text>
       
       <!-- Auto Tag -->
-      <text x="178" y="26" text-anchor="end" fill="#64748B" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" font-weight="700">AUTO</text>
+      <text x="180" y="26" text-anchor="end" fill="#64748B" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" font-weight="700">AUTO</text>
 
       <!-- Title -->
       <text x="12" y="58" fill="#FFFFFF" font-size="19" font-weight="750">See Result</text>
 
       <!-- Big Center Visual Icon -->
       <g transform="translate(12, 72)">
-        <rect width="166" height="110" rx="10" fill="#0C1D15" stroke="#16422F" stroke-width="1"/>
+        <rect width="168" height="110" rx="10" fill="#0B1C14" stroke="#16432E" stroke-width="1"/>
         <!-- Sparkle / Check Icon -->
-        <circle cx="83" cy="38" r="22" fill="#0F2B1F" stroke="#1D5C40" stroke-width="1.2"/>
-        <path d="M74 38 L80 44 L92 32" fill="none" stroke="#34D399" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="84" cy="38" r="22" fill="#0F2B1F" stroke="#1D5C40" stroke-width="1.2"/>
+        <path d="M75 38 L81 44 L93 32" fill="none" stroke="#34D399" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
 
         <!-- Done Badge -->
-        <rect x="14" y="72" width="138" height="26" rx="6" fill="#07140E" stroke="#103323" stroke-width="1"/>
-        <text x="83" y="89" text-anchor="middle" fill="#86EFAC" font-size="11" font-weight="750">✨ Done for you</text>
+        <rect x="14" y="72" width="140" height="26" rx="6" fill="#07140E" stroke="#103323" stroke-width="1"/>
+        <text x="84" y="89" text-anchor="middle" fill="#86EFAC" font-size="11" font-weight="750">✨ Done for you</text>
       </g>
 
       <!-- 1-Line Explanation -->

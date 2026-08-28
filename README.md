@@ -22,7 +22,7 @@
 
 ## Key Highlights
 
-- Dispatch `agy` as a specialized sub-agent directly from your daily AI coding environment (e.g., Codex, DeepSeek Harness) without switching workflows or tools. (Gemini 3.7 Flash, Gemini 3.1 Pro, Claude Opus 4.6)
+- Dispatch `agy` as a specialized sub-agent directly from your daily AI coding environment (e.g., Codex, DeepSeek Harness) without switching workflows or tools, leveraging Antigravity frontier models (Gemini 3.7 Flash, Gemini 3.1 Pro, Claude Opus 4.6).
 - **Zero API Keys & Zero Setup Hassle**: Get started instantly. Simply authenticate once via the official `agy` terminal CLI; no API keys, tokens, or secrets to configure or manage.
 - **Outsource Complex Tasks with Structured Handoffs**: Delegate demanding code exploration, bug investigations, or test writing to Antigravity and receive clean Markdown handoff reports and verified git diffs.
 - **Transparent & Secure Sub-Agent Boundary**: Built strictly on the official headless CLI interface. Never extracts OAuth credentials, never exposes external proxy ports, and respects explicit security boundaries.

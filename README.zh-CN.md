@@ -22,7 +22,7 @@
 
 ## 核心特性
 
-- 无需切换现有工作流，在日常使用的 AI 编程环境（如 Codex、DeepSeek Harness 等）中直接把 `agy` 作为专属子 Agent 调用，快速体验并评测最新大模型（Gemini 3.7 Flash, Gemini 3.1 Pro, Claude Opus 4.6）。
+- 无需切换现有工作流，在日常使用的 AI 编程环境（如 Codex、DeepSeek Harness 等）中直接把 `agy` 作为专属子 Agent 调用，无缝调度 Antigravity 前沿推理模型（Gemini 3.7 Flash, Gemini 3.1 Pro, Claude Opus 4.6）。
 - **零 API Key 极速起步**：本地仅需运行一次官方 `agy` 登录，无需在宿主或 Skill 中配置、管理任何 API 密钥或环境变量。
 - **复杂任务一键外包与结构化交付**：将耗时的代码分析、Bug 调查、单测编写等任务直接委托给子 Agent，自动获取清晰的 Markdown 交付报告与改动 Diff。
 - **安全透明的官方子 Agent 边界**：严格基于官方无头 CLI 接口委托，不提取敏感凭据，不暴露外部代理网络端口，权限与沙箱边界清晰可控。
