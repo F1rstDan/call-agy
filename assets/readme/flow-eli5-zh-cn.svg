@@ -1,346 +1,302 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
-  <title id="title">call-agy 工作原理 — 5 步极简流程图</title>
-  <desc id="desc">面向使用者的直观流程解析：在主 Agent 对话框中输入一句话，极简转发为官方 agy 无头指令并在官方沙箱中自主执行，返回结构化 handoff 交付报告并归纳呈现。</desc>
+  <title id="title">call-agy 工作原理 — 一句话派发，全程自动</title>
+  <desc id="desc">你在主 Agent 对话框中输入一句话，其余全由官方 agy 无头指令、官方沙箱、结构化 handoff 自动完成交付。</desc>
 
   <defs>
     <!-- Background Canvas Gradient -->
     <linearGradient id="bg-grad-eli5-zh" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#0B0D14"/>
-      <stop offset="45%" stop-color="#0E121E"/>
+      <stop offset="50%" stop-color="#0E121E"/>
       <stop offset="100%" stop-color="#07080D"/>
     </linearGradient>
 
     <!-- Radial Glows -->
-    <radialGradient id="glow-purple-zh" cx="18%" cy="30%" r="42%">
-      <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.16"/>
+    <radialGradient id="glow-user-zh" cx="14%" cy="35%" r="40%">
+      <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.22"/>
       <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="glow-blue-zh" cx="50%" cy="45%" r="45%">
-      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.12"/>
+    <radialGradient id="glow-auto-zh" cx="70%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.10"/>
       <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="glow-green-zh" cx="82%" cy="60%" r="42%">
-      <stop offset="0%" stop-color="#10B981" stop-opacity="0.13"/>
-      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
-    </radialGradient>
-
-    <!-- Card Gradients -->
-    <linearGradient id="card-grad-zh" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#161925"/>
-      <stop offset="100%" stop-color="#0F1119"/>
-    </linearGradient>
-    <linearGradient id="inner-box-grad-zh" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1C2030"/>
-      <stop offset="100%" stop-color="#121522"/>
-    </linearGradient>
-
-    <!-- Accent Top Bars -->
-    <linearGradient id="bar-step1-zh" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#C084FC"/>
-      <stop offset="100%" stop-color="#8B5CF6"/>
-    </linearGradient>
-    <linearGradient id="bar-step2-zh" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#38BDF8"/>
-      <stop offset="100%" stop-color="#6366F1"/>
-    </linearGradient>
-    <linearGradient id="bar-step3-zh" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#22D3EE"/>
-      <stop offset="100%" stop-color="#0284C7"/>
-    </linearGradient>
-    <linearGradient id="bar-step4-zh" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#FBBF24"/>
-      <stop offset="100%" stop-color="#F59E0B"/>
-    </linearGradient>
-    <linearGradient id="bar-step5-zh" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#34D399"/>
-      <stop offset="100%" stop-color="#059669"/>
-    </linearGradient>
-
-    <!-- Shield Background Gradient -->
-    <linearGradient id="shield-bg-zh" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0C241B"/>
-      <stop offset="100%" stop-color="#081812"/>
-    </linearGradient>
 
     <!-- Subtle Tech Grid -->
     <pattern id="grid-pattern-zh" width="40" height="40" patternUnits="userSpaceOnUse">
-      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1E2435" stroke-width="0.75" opacity="0.35"/>
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1D2232" stroke-width="0.75" opacity="0.35"/>
     </pattern>
 
+    <!-- Step 1 User Card Gradient -->
+    <linearGradient id="user-card-grad-zh" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E1B30"/>
+      <stop offset="100%" stop-color="#12101E"/>
+    </linearGradient>
+
+    <!-- Auto Container Gradient -->
+    <linearGradient id="auto-container-grad-zh" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#101420"/>
+      <stop offset="100%" stop-color="#0B0E17"/>
+    </linearGradient>
+
+    <!-- Mini Step Card Gradient -->
+    <linearGradient id="step-card-grad-zh" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#161B28"/>
+      <stop offset="100%" stop-color="#10131D"/>
+    </linearGradient>
+
+    <!-- Shield Background Gradient -->
+    <linearGradient id="badge-grad-zh" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0E271D"/>
+      <stop offset="100%" stop-color="#0A1C15"/>
+    </linearGradient>
+
     <!-- Flow Arrow Marker -->
-    <marker id="flow-arrow-zh" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#64748B" />
+    <marker id="flow-arrow-gray-zh" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 2 L 7 5 L 0 8 z" fill="#475569" />
+    </marker>
+    <marker id="flow-arrow-purple-zh" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#A78BFA" />
     </marker>
   </defs>
 
-  <!-- Canvas Outer Container -->
+  <!-- Outer Canvas -->
   <rect x="1" y="1" width="1198" height="418" rx="24" fill="url(#bg-grad-eli5-zh)" stroke="#24293A" stroke-width="1.5"/>
   <rect x="1" y="1" width="1198" height="418" rx="24" fill="url(#grid-pattern-zh)"/>
-  <rect x="1" y="1" width="1198" height="418" rx="24" fill="url(#glow-purple-zh)"/>
-  <rect x="1" y="1" width="1198" height="418" rx="24" fill="url(#glow-blue-zh)"/>
-  <rect x="1" y="1" width="1198" height="418" rx="24" fill="url(#glow-green-zh)"/>
+  <rect x="1" y="1" width="1198" height="418" rx="24" fill="url(#glow-user-zh)"/>
+  <rect x="1" y="1" width="1198" height="418" rx="24" fill="url(#glow-auto-zh)"/>
 
-  <!-- Top Edge Subtle Highlight -->
+  <!-- Top Highlight -->
   <path d="M 28 1 L 1172 1" stroke="#3D465E" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
 
   <!-- ==================== HEADER ROW ==================== -->
-  <g id="header-row" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
-    <!-- Left Category / Proposition Badge -->
+  <g id="header" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
+    <!-- Left Proposition Badge -->
     <g transform="translate(44, 24)">
-      <rect width="320" height="34" rx="17" fill="#141722" stroke="#2B3144" stroke-width="1"/>
-      <!-- Lightning Icon -->
-      <path d="M18 9 L12 18 L17 18 L15 25 L22 15 L17 15 Z" fill="#A78BFA"/>
-      <text x="32" y="22" fill="#E2E8F0" font-size="13" font-weight="700" letter-spacing="1.0">工作原理 · 一句话委托给官方 CLI</text>
+      <rect width="230" height="34" rx="17" fill="#141722" stroke="#2B3144" stroke-width="1"/>
+      <path d="M16 10 L11 18 L16 18 L14 24 L20 16 L16 16 Z" fill="#A78BFA"/>
+      <text x="30" y="22" fill="#E2E8F0" font-size="12" font-weight="700" letter-spacing="1">极简流程 · 仅需一句话</text>
     </g>
 
-    <!-- Right Security Trust Badge -->
-    <g transform="translate(684, 24)">
-      <rect width="472" height="34" rx="17" fill="url(#shield-bg-zh)" stroke="#174B38" stroke-width="1.2"/>
+    <!-- Right Shield / Equivalence Badge (User required) -->
+    <g transform="translate(776, 24)">
+      <rect width="380" height="34" rx="17" fill="url(#badge-grad-zh)" stroke="#1F6347" stroke-width="1.2"/>
       <!-- Shield Icon -->
       <g transform="translate(14, 8)">
         <path d="M9 1 L2 4 V9 C2 13.5 5 17 9 18 C13 17 16 13.5 16 9 V4 L9 1 Z" fill="none" stroke="#34D399" stroke-width="1.6" stroke-linejoin="round"/>
         <path d="M6 9.5 L8 11.5 L12 6.5" fill="none" stroke="#34D399" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
       </g>
-      <text x="38" y="22" fill="#6EE7B7" font-size="13" font-weight="750" letter-spacing="0.5">100% 官方 AGY CLI · 不碰敏感凭据 · 不开代理端口</text>
+      <!-- Equivalence Text -->
+      <text x="38" y="22" fill="#86EFAC" font-size="13" font-weight="650" letter-spacing="0.2">
+        该 SKILL 等于官方 <tspan font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="750" fill="#34D399">agy -p "..."</tspan>
+      </text>
     </g>
   </g>
 
-  <!-- ==================== 5-STEP WORKFLOW CARDS ==================== -->
+  <!-- ==================== WORKFLOW CONTAINER ==================== -->
 
-  <!-- ==================== STEP 1: 自然语言发话 ==================== -->
-  <g id="step-1" transform="translate(44, 76)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
-    <!-- Card Frame -->
-    <rect width="202" height="316" rx="16" fill="url(#card-grad-zh)" stroke="#262B3D" stroke-width="1.2"/>
-    <rect width="202" height="4" rx="2" fill="url(#bar-step1-zh)"/>
+  <!-- ===== STEP 1 (LEFT): YOU DO THIS (HIGHLIGHTED) ===== -->
+  <g id="step-1-user" transform="translate(44, 76)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
+    <!-- Highlighted Frame with Glow Border -->
+    <rect width="216" height="316" rx="16" fill="url(#user-card-grad-zh)" stroke="#8B5CF6" stroke-width="1.8"/>
+    <!-- Top Accent Bar -->
+    <rect width="216" height="5" rx="2" fill="#A78BFA"/>
 
-    <!-- Step Badge & Icon -->
-    <rect x="14" y="14" width="58" height="22" rx="6" fill="#1B1E2D" stroke="#31384E" stroke-width="1"/>
-    <text x="43" y="29" text-anchor="middle" fill="#C084FC" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11" font-weight="700">STEP 1</text>
-    
-    <!-- User Chat Icon -->
-    <g transform="translate(162, 14)">
-      <circle cx="12" cy="11" r="13" fill="#1E1C2E" stroke="#3D3459" stroke-width="1"/>
-      <path d="M8 8 H16 C17.1 8 18 8.9 18 10 V14 C18 15.1 17.1 16 16 16 H10 L7 19 V10 C7 8.9 7.9 8 8 8 Z" fill="none" stroke="#C084FC" stroke-width="1.4" stroke-linejoin="round"/>
+    <!-- YOU DO THIS Badge -->
+    <g transform="translate(14, 14)">
+      <rect width="112" height="24" rx="6" fill="#312252" stroke="#6D43C7" stroke-width="1"/>
+      <circle cx="12" cy="12" r="3.5" fill="#C084FC"/>
+      <text x="22" y="16.5" fill="#E9D5FF" font-size="11" font-weight="800" letter-spacing="0.5">你唯一要做的</text>
     </g>
 
-    <!-- Card Title -->
-    <text x="14" y="66" fill="#FFFFFF" font-size="18.5" font-weight="750" letter-spacing="-0.2">1. 对话发一句话</text>
+    <!-- Big Title -->
+    <text x="14" y="74" fill="#FFFFFF" font-size="22" font-weight="800" letter-spacing="-0.2">你说一句话</text>
 
-    <!-- Visual Interactive Box -->
-    <g transform="translate(12, 80)">
-      <rect width="178" height="116" rx="10" fill="url(#inner-box-grad-zh)" stroke="#272D40" stroke-width="1"/>
-      <!-- Host Chat Bubble -->
-      <rect x="10" y="12" width="158" height="60" rx="8" fill="#241E38" stroke="#48386E" stroke-width="1"/>
-      <text x="16" y="32" fill="#E9D5FF" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11.5" font-weight="700">"用 $call-agy 帮我</text>
-      <text x="16" y="50" fill="#DDD6FE" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11.5" font-weight="700">审查这段改动"</text>
-      <circle cx="150" cy="50" r="3" fill="#C084FC"/>
+    <!-- Center Big Visual: Host Chat Bubble -->
+    <g transform="translate(14, 92)">
+      <rect width="188" height="120" rx="12" fill="#261F3C" stroke="#4C357A" stroke-width="1.2"/>
       
-      <!-- Mini Pill -->
-      <rect x="10" y="80" width="158" height="24" rx="6" fill="#161826" stroke="#2D3349" stroke-width="1"/>
-      <text x="89" y="96" text-anchor="middle" fill="#A78BFA" font-size="11" font-weight="650">主 Agent 日常对话框</text>
+      <!-- Mini avatar & tag -->
+      <circle cx="22" cy="24" r="10" fill="#432874"/>
+      <path d="M18 22 C18 20 20 18 22 18 C24 18 26 20 26 22 M19 27 C19 25 21 24 22 24 C23 24 25 25 25 27" fill="none" stroke="#C084FC" stroke-width="1.2"/>
+      <text x="38" y="27" fill="#DDD6FE" font-size="11" font-weight="700">主 Agent 对话</text>
+
+      <!-- User prompt string -->
+      <rect x="12" y="44" width="164" height="62" rx="8" fill="#1A142A" stroke="#372658" stroke-width="1"/>
+      <text x="18" y="66" fill="#C084FC" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" font-weight="750">用 $call-agy</text>
+      <text x="18" y="86" fill="#E2E8F0" font-size="12" font-weight="500">帮我修复报错...</text>
+      <circle cx="162" cy="84" r="2.5" fill="#A78BFA"/>
     </g>
 
-    <!-- Explanation Text -->
-    <line x1="14" y1="210" x2="188" y2="210" stroke="#1E2333" stroke-width="1"/>
-    <text x="14" y="234" fill="#F1F5F9" font-size="13.5" font-weight="600">自然语言直接说</text>
-    <text x="14" y="254" fill="#94A3B8" font-size="12.5" font-weight="400">无需改变任何使用习惯</text>
-    <text x="14" y="272" fill="#94A3B8" font-size="12.5" font-weight="400">零 API Key，开箱即用</text>
+    <!-- 1-Line Minimal Explanation -->
+    <text x="14" y="244" fill="#E9D5FF" font-size="13" font-weight="600">日常对话输入一句话</text>
+    <text x="14" y="264" fill="#94A3B8" font-size="12">无需配置，开箱即用</text>
 
     <!-- Bottom Tag -->
-    <text x="14" y="300" fill="#A78BFA" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="700">→ 零门槛日常对话</text>
+    <rect x="14" y="278" width="188" height="24" rx="6" fill="#191526" stroke="#2F2548" stroke-width="1"/>
+    <text x="108" y="294" text-anchor="middle" fill="#A78BFA" font-size="11" font-weight="700">✨ 你只需做这一步</text>
   </g>
 
-  <!-- Arrow 1 -> 2 -->
-  <g transform="translate(248, 222)">
-    <line x1="0" y1="0" x2="21" y2="0" stroke="#475569" stroke-width="1.8" marker-end="url(#flow-arrow-zh)" stroke-dasharray="3 2"/>
+  <!-- Big Transition Arrow: Prompt -> Auto Pipeline -->
+  <g transform="translate(266, 222)">
+    <line x1="0" y1="0" x2="20" y2="0" stroke="#8B5CF6" stroke-width="2.5" marker-end="url(#flow-arrow-purple-zh)"/>
   </g>
 
-  <!-- ==================== STEP 2: 官方无头转发 ==================== -->
-  <g id="step-2" transform="translate(273, 76)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
-    <!-- Card Frame -->
-    <rect width="202" height="316" rx="16" fill="url(#card-grad-zh)" stroke="#262B3D" stroke-width="1.2"/>
-    <rect width="202" height="4" rx="2" fill="url(#bar-step2-zh)"/>
+  <!-- ===== STEPS 2–5 (RIGHT): FULLY AUTOMATIC PIPELINE ===== -->
+  <g id="auto-pipeline" transform="translate(296, 76)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
+    <!-- Auto Area Background Frame -->
+    <rect width="860" height="316" rx="16" fill="url(#auto-container-grad-zh)" stroke="#222B3D" stroke-width="1.2"/>
 
-    <!-- Step Badge & Icon -->
-    <rect x="14" y="14" width="58" height="22" rx="6" fill="#161F2E" stroke="#253852" stroke-width="1"/>
-    <text x="43" y="29" text-anchor="middle" fill="#38BDF8" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11" font-weight="700">STEP 2</text>
-    
-    <!-- Forward/Router Icon -->
-    <g transform="translate(162, 14)">
-      <circle cx="12" cy="11" r="13" fill="#152233" stroke="#224566" stroke-width="1"/>
-      <path d="M7 11 L14 11 M11 7 L15 11 L11 15" fill="none" stroke="#38BDF8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Top Pipeline Bar -->
+    <g transform="translate(18, 12)">
+      <rect width="824" height="28" rx="8" fill="#131B29" stroke="#1E2B42" stroke-width="1"/>
+      <circle cx="18" cy="14" r="4" fill="#38BDF8"/>
+      <circle cx="18" cy="14" r="7" fill="#38BDF8" opacity="0.25"/>
+      <text x="32" y="19" fill="#93C5FD" font-size="12" font-weight="750" letter-spacing="0.8">🤖 之后全自动执行 · 官方沙箱全托管</text>
     </g>
 
-    <!-- Card Title -->
-    <text x="14" y="66" fill="#FFFFFF" font-size="18.5" font-weight="750" letter-spacing="-0.2">2. 官方无头转发</text>
-
-    <!-- Visual Interactive Box -->
-    <g transform="translate(12, 80)">
-      <rect width="178" height="116" rx="10" fill="url(#inner-box-grad-zh)" stroke="#272D40" stroke-width="1"/>
-      <!-- CLI Box -->
-      <rect x="10" y="12" width="158" height="60" rx="8" fill="#111B28" stroke="#1D3E5E" stroke-width="1"/>
-      <text x="18" y="32" fill="#38BDF8" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12.5" font-weight="750">agy --print</text>
-      <text x="18" y="50" fill="#93C5FD" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11" font-weight="600">"审查这段改动"</text>
-      <circle cx="148" cy="30" r="3" fill="#34D399"/>
-
-      <!-- Equivalence Pill -->
-      <rect x="10" y="80" width="158" height="24" rx="6" fill="#0E2233" stroke="#1A4366" stroke-width="1"/>
-      <text x="89" y="96" text-anchor="middle" fill="#7DD3FC" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" font-weight="700">等价官方 agy -P</text>
-    </g>
-
-    <!-- Explanation Text -->
-    <line x1="14" y1="210" x2="188" y2="210" stroke="#1E2333" stroke-width="1"/>
-    <text x="14" y="234" fill="#F1F5F9" font-size="13.5" font-weight="600">极轻转译开销</text>
-    <text x="14" y="254" fill="#94A3B8" font-size="12.5" font-weight="400">主 Agent 把任务转为指令</text>
-    <text x="14" y="272" fill="#94A3B8" font-size="12.5" font-weight="400">直接调起官方 agy CLI</text>
-
-    <!-- Bottom Tag -->
-    <text x="14" y="300" fill="#38BDF8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="700">→ 不提取凭据/无代理</text>
-  </g>
-
-  <!-- Arrow 2 -> 3 -->
-  <g transform="translate(477, 222)">
-    <line x1="0" y1="0" x2="21" y2="0" stroke="#475569" stroke-width="1.8" marker-end="url(#flow-arrow-zh)" stroke-dasharray="3 2"/>
-  </g>
-
-  <!-- ==================== STEP 3: 官方沙箱内执行 ==================== -->
-  <g id="step-3" transform="translate(502, 76)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
-    <!-- Card Frame -->
-    <rect width="202" height="316" rx="16" fill="url(#card-grad-zh)" stroke="#262B3D" stroke-width="1.2"/>
-    <rect width="202" height="4" rx="2" fill="url(#bar-step3-zh)"/>
-
-    <!-- Step Badge & Icon -->
-    <rect x="14" y="14" width="58" height="22" rx="6" fill="#11242E" stroke="#1E4759" stroke-width="1"/>
-    <text x="43" y="29" text-anchor="middle" fill="#22D3EE" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11" font-weight="700">STEP 3</text>
-    
-    <!-- Engine/Gear Icon -->
-    <g transform="translate(162, 14)">
-      <circle cx="12" cy="11" r="13" fill="#102530" stroke="#194B5E" stroke-width="1"/>
-      <path d="M12 7 V15 M8 11 H16" stroke="#22D3EE" stroke-width="1.5" stroke-linecap="round"/>
-      <circle cx="12" cy="11" r="5" fill="none" stroke="#22D3EE" stroke-width="1.3"/>
-    </g>
-
-    <!-- Card Title -->
-    <text x="14" y="66" fill="#FFFFFF" font-size="18.5" font-weight="750" letter-spacing="-0.2">3. 官方沙箱执行</text>
-
-    <!-- Visual Interactive Box -->
-    <g transform="translate(12, 80)">
-      <rect width="178" height="116" rx="10" fill="url(#inner-box-grad-zh)" stroke="#272D40" stroke-width="1"/>
-      <!-- Sandbox Box -->
-      <rect x="10" y="12" width="158" height="60" rx="8" fill="#0C2029" stroke="#154B5C" stroke-width="1"/>
-      <text x="18" y="32" fill="#22D3EE" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12" font-weight="750">⚡ agy 引擎运行</text>
+    <!-- ================= Step 2: Auto Forward ================= -->
+    <g id="mini-step-2" transform="translate(18, 50)">
+      <rect width="190" height="252" rx="12" fill="url(#step-card-grad-zh)" stroke="#232C3E" stroke-width="1"/>
+      <rect width="190" height="3" rx="1.5" fill="#38BDF8"/>
       
-      <!-- Status pill with pulse dot -->
-      <circle cx="22" cy="48" r="3.5" fill="#34D399"/>
-      <text x="32" y="52" fill="#6EE7B7" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="10.5" font-weight="700">沙箱与权限生效中</text>
+      <!-- Step Badge -->
+      <rect x="12" y="12" width="52" height="20" rx="5" fill="#152438" stroke="#1F3D61" stroke-width="1"/>
+      <text x="38" y="26" text-anchor="middle" fill="#38BDF8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="750">STEP 2</text>
+      
+      <!-- Auto Tag -->
+      <text x="178" y="26" text-anchor="end" fill="#64748B" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" font-weight="700">自动</text>
 
-      <!-- Sub text -->
-      <rect x="10" y="80" width="158" height="24" rx="6" fill="#0B1A24" stroke="#16394C" stroke-width="1"/>
-      <text x="89" y="96" text-anchor="middle" fill="#67E8F9" font-size="11" font-weight="650">官方沙箱 · 权限可控</text>
+      <!-- Title -->
+      <text x="12" y="58" fill="#FFFFFF" font-size="19" font-weight="750">自动转发</text>
+
+      <!-- Big Center Visual Icon -->
+      <g transform="translate(12, 72)">
+        <rect width="166" height="110" rx="10" fill="#0F1622" stroke="#1C2C42" stroke-width="1"/>
+        <!-- Fast Arrow Icon -->
+        <circle cx="83" cy="38" r="22" fill="#132338" stroke="#1E446B" stroke-width="1.2"/>
+        <path d="M72 38 L92 38 M85 31 L93 38 L85 45" fill="none" stroke="#38BDF8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        
+        <!-- Command Badge -->
+        <rect x="14" y="72" width="138" height="26" rx="6" fill="#0A1018" stroke="#162B44" stroke-width="1"/>
+        <text x="83" y="89" text-anchor="middle" fill="#7DD3FC" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="700">agy --print</text>
+      </g>
+
+      <!-- 1-Line Explanation -->
+      <text x="12" y="206" fill="#F1F5F9" font-size="12.5" font-weight="600">极简转译为指令</text>
+      <text x="12" y="224" fill="#94A3B8" font-size="11.5">等价官方 agy -p</text>
     </g>
 
-    <!-- Explanation Text -->
-    <line x1="14" y1="210" x2="188" y2="210" stroke="#1E2333" stroke-width="1"/>
-    <text x="14" y="234" fill="#F1F5F9" font-size="13.5" font-weight="600">自主执行脏活累活</text>
-    <text x="14" y="254" fill="#94A3B8" font-size="12.5" font-weight="400">Antigravity 独立探索代码、</text>
-    <text x="14" y="272" fill="#94A3B8" font-size="12.5" font-weight="400">修复 Bug 并运行测试</text>
-
-    <!-- Bottom Tag -->
-    <text x="14" y="300" fill="#22D3EE" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="700">→ 官方原生沙箱隔离</text>
-  </g>
-
-  <!-- Arrow 3 -> 4 -->
-  <g transform="translate(706, 222)">
-    <line x1="0" y1="0" x2="21" y2="0" stroke="#475569" stroke-width="1.8" marker-end="url(#flow-arrow-zh)" stroke-dasharray="3 2"/>
-  </g>
-
-  <!-- ==================== STEP 4: 交付文档返回 ==================== -->
-  <g id="step-4" transform="translate(731, 76)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
-    <!-- Card Frame -->
-    <rect width="202" height="316" rx="16" fill="url(#card-grad-zh)" stroke="#262B3D" stroke-width="1.2"/>
-    <rect width="202" height="4" rx="2" fill="url(#bar-step4-zh)"/>
-
-    <!-- Step Badge & Icon -->
-    <rect x="14" y="14" width="58" height="22" rx="6" fill="#291F14" stroke="#4E3B1C" stroke-width="1"/>
-    <text x="43" y="29" text-anchor="middle" fill="#FBBF24" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11" font-weight="700">STEP 4</text>
-    
-    <!-- Document Icon -->
-    <g transform="translate(162, 14)">
-      <circle cx="12" cy="11" r="13" fill="#291F12" stroke="#543C1B" stroke-width="1"/>
-      <path d="M8 7 H14 L17 10 V16 H8 Z" fill="none" stroke="#FBBF24" stroke-width="1.4" stroke-linejoin="round"/>
-      <path d="M14 7 V10 H17" fill="none" stroke="#FBBF24" stroke-width="1.4"/>
+    <!-- Arrow 2 -> 3 -->
+    <g transform="translate(212, 175)">
+      <line x1="0" y1="0" x2="16" y2="0" stroke="#334155" stroke-width="1.8" stroke-dasharray="3 2" marker-end="url(#flow-arrow-gray-zh)"/>
     </g>
 
-    <!-- Card Title -->
-    <text x="14" y="66" fill="#FFFFFF" font-size="18.5" font-weight="750" letter-spacing="-0.2">4. 交付文档返回</text>
+    <!-- ================= Step 3: Auto Run ================= -->
+    <g id="mini-step-3" transform="translate(230, 50)">
+      <rect width="190" height="252" rx="12" fill="url(#step-card-grad-zh)" stroke="#232C3E" stroke-width="1"/>
+      <rect width="190" height="3" rx="1.5" fill="#22D3EE"/>
 
-    <!-- Visual Interactive Box -->
-    <g transform="translate(12, 80)">
-      <rect width="178" height="116" rx="10" fill="url(#inner-box-grad-zh)" stroke="#272D40" stroke-width="1"/>
-      <!-- File Delivery Box -->
-      <rect x="10" y="12" width="158" height="60" rx="8" fill="#261C10" stroke="#523B17" stroke-width="1"/>
-      <text x="18" y="32" fill="#FBBF24" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="12.5" font-weight="750">📄 handoff.md</text>
-      <text x="18" y="50" fill="#FDE68A" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11" font-weight="600">+ 验证 Diff 与会话 ID</text>
+      <!-- Step Badge -->
+      <rect x="12" y="12" width="52" height="20" rx="5" fill="#102936" stroke="#18485E" stroke-width="1"/>
+      <text x="38" y="26" text-anchor="middle" fill="#22D3EE" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="750">STEP 3</text>
+      
+      <!-- Auto Tag -->
+      <text x="178" y="26" text-anchor="end" fill="#64748B" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" font-weight="700">自动</text>
 
-      <!-- Markdown Pill -->
-      <rect x="10" y="80" width="158" height="24" rx="6" fill="#1C150C" stroke="#3D2B11" stroke-width="1"/>
-      <text x="89" y="96" text-anchor="middle" fill="#F59E0B" font-size="11" font-weight="650">结构化 Markdown 回执</text>
+      <!-- Title -->
+      <text x="12" y="58" fill="#FFFFFF" font-size="19" font-weight="750">自动执行</text>
+
+      <!-- Big Center Visual Icon -->
+      <g transform="translate(12, 72)">
+        <rect width="166" height="110" rx="10" fill="#0C1B24" stroke="#173B4D" stroke-width="1"/>
+        <!-- Gear / Sandbox Icon -->
+        <circle cx="83" cy="38" r="22" fill="#0F2836" stroke="#19546E" stroke-width="1.2"/>
+        <path d="M83 26 V50 M71 38 H95" stroke="#22D3EE" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="83" cy="38" r="8" fill="#0C1B24" stroke="#22D3EE" stroke-width="1.8"/>
+
+        <!-- Sandbox Active Badge -->
+        <rect x="14" y="72" width="138" height="26" rx="6" fill="#08141C" stroke="#13384A" stroke-width="1"/>
+        <circle cx="28" cy="85" r="3" fill="#34D399"/>
+        <text x="86" y="89" text-anchor="middle" fill="#67E8F9" font-size="10.5" font-weight="700">官方沙箱环境</text>
+      </g>
+
+      <!-- 1-Line Explanation -->
+      <text x="12" y="206" fill="#F1F5F9" font-size="12.5" font-weight="600">自主处理脏活累活</text>
+      <text x="12" y="224" fill="#94A3B8" font-size="11.5">探索代码、改动与测试</text>
     </g>
 
-    <!-- Explanation Text -->
-    <line x1="14" y1="210" x2="188" y2="210" stroke="#1E2333" stroke-width="1"/>
-    <text x="14" y="234" fill="#F1F5F9" font-size="13.5" font-weight="600">精致结构化交付</text>
-    <text x="14" y="254" fill="#94A3B8" font-size="12.5" font-weight="400">吐回整洁的交付总结</text>
-    <text x="14" y="272" fill="#94A3B8" font-size="12.5" font-weight="400">保留改动 Diff 与会话 ID</text>
-
-    <!-- Bottom Tag -->
-    <text x="14" y="300" fill="#FBBF24" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="700">→ 支持多轮无损接续</text>
-  </g>
-
-  <!-- Arrow 4 -> 5 -->
-  <g transform="translate(935, 222)">
-    <line x1="0" y1="0" x2="21" y2="0" stroke="#475569" stroke-width="1.8" marker-end="url(#flow-arrow-zh)" stroke-dasharray="3 2"/>
-  </g>
-
-  <!-- ==================== STEP 5: 归纳呈现给你 ==================== -->
-  <g id="step-5" transform="translate(960, 76)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
-    <!-- Card Frame -->
-    <rect width="202" height="316" rx="16" fill="url(#card-grad-zh)" stroke="#262B3D" stroke-width="1.2"/>
-    <rect width="202" height="4" rx="2" fill="url(#bar-step5-zh)"/>
-
-    <!-- Step Badge & Icon -->
-    <rect x="14" y="14" width="58" height="22" rx="6" fill="#10251C" stroke="#1D4A36" stroke-width="1"/>
-    <text x="43" y="29" text-anchor="middle" fill="#34D399" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="11" font-weight="700">STEP 5</text>
-    
-    <!-- Sparkle / Check Icon -->
-    <g transform="translate(162, 14)">
-      <circle cx="12" cy="11" r="13" fill="#0E241B" stroke="#1A4A35" stroke-width="1"/>
-      <path d="M8 11.5 L11 14.5 L16 8.5" fill="none" stroke="#34D399" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Arrow 3 -> 4 -->
+    <g transform="translate(424, 175)">
+      <line x1="0" y1="0" x2="16" y2="0" stroke="#334155" stroke-width="1.8" stroke-dasharray="3 2" marker-end="url(#flow-arrow-gray-zh)"/>
     </g>
 
-    <!-- Card Title -->
-    <text x="14" y="66" fill="#FFFFFF" font-size="18.5" font-weight="750" letter-spacing="-0.2">5. 归纳呈现给你</text>
+    <!-- ================= Step 4: Auto Handoff ================= -->
+    <g id="mini-step-4" transform="translate(442, 50)">
+      <rect width="190" height="252" rx="12" fill="url(#step-card-grad-zh)" stroke="#232C3E" stroke-width="1"/>
+      <rect width="190" height="3" rx="1.5" fill="#FBBF24"/>
 
-    <!-- Visual Interactive Box -->
-    <g transform="translate(12, 80)">
-      <rect width="178" height="116" rx="10" fill="url(#inner-box-grad-zh)" stroke="#272D40" stroke-width="1"/>
-      <!-- Host Deliver Box -->
-      <rect x="10" y="12" width="158" height="60" rx="8" fill="#0C2218" stroke="#184D34" stroke-width="1"/>
-      <text x="18" y="32" fill="#34D399" font-size="12" font-weight="750">✨ 执行完毕 · 结果已归纳</text>
-      <text x="18" y="50" fill="#A7F3D0" font-size="11" font-weight="600">改动总结与结论就绪</text>
+      <!-- Step Badge -->
+      <rect x="12" y="12" width="52" height="20" rx="5" fill="#2E2413" stroke="#5C451D" stroke-width="1"/>
+      <text x="38" y="26" text-anchor="middle" fill="#FBBF24" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="750">STEP 4</text>
+      
+      <!-- Auto Tag -->
+      <text x="178" y="26" text-anchor="end" fill="#64748B" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" font-weight="700">自动</text>
 
-      <!-- Continue Pill -->
-      <rect x="10" y="80" width="158" height="24" rx="6" fill="#081A12" stroke="#133C29" stroke-width="1"/>
-      <text x="89" y="96" text-anchor="middle" fill="#6EE7B7" font-size="11" font-weight="650">随时继续下一步迭代</text>
+      <!-- Title -->
+      <text x="12" y="58" fill="#FFFFFF" font-size="19" font-weight="750">自动回执</text>
+
+      <!-- Big Center Visual Icon -->
+      <g transform="translate(12, 72)">
+        <rect width="166" height="110" rx="10" fill="#1C170D" stroke="#3D3016" stroke-width="1"/>
+        <!-- Doc Icon -->
+        <circle cx="83" cy="38" r="22" fill="#2A200E" stroke="#5C4215" stroke-width="1.2"/>
+        <path d="M75 28 H86 L91 33 V48 H75 Z" fill="none" stroke="#FBBF24" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M86 28 V33 H91" fill="none" stroke="#FBBF24" stroke-width="1.6"/>
+
+        <!-- Handoff File Badge -->
+        <rect x="14" y="72" width="138" height="26" rx="6" fill="#140E06" stroke="#33240D" stroke-width="1"/>
+        <text x="83" y="89" text-anchor="middle" fill="#FDE68A" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="750">handoff.md</text>
+      </g>
+
+      <!-- 1-Line Explanation -->
+      <text x="12" y="206" fill="#F1F5F9" font-size="12.5" font-weight="600">吐回整洁移交报告</text>
+      <text x="12" y="224" fill="#94A3B8" font-size="11.5">包含完整 Diff 与 ID</text>
     </g>
 
-    <!-- Explanation Text -->
-    <line x1="14" y1="210" x2="188" y2="210" stroke="#1E2333" stroke-width="1"/>
-    <text x="14" y="234" fill="#F1F5F9" font-size="13.5" font-weight="600">主 Agent 梳理结果</text>
-    <text x="14" y="254" fill="#94A3B8" font-size="12.5" font-weight="400">清晰向你汇报核心结论</text>
-    <text x="14" y="272" fill="#94A3B8" font-size="12.5" font-weight="400">无缝接续后续开发任务</text>
+    <!-- Arrow 4 -> 5 -->
+    <g transform="translate(636, 175)">
+      <line x1="0" y1="0" x2="16" y2="0" stroke="#334155" stroke-width="1.8" stroke-dasharray="3 2" marker-end="url(#flow-arrow-gray-zh)"/>
+    </g>
 
-    <!-- Bottom Tag -->
-    <text x="14" y="300" fill="#34D399" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" font-weight="700">→ 随时审阅与继续</text>
+    <!-- ================= Step 5: Done & See Results ================= -->
+    <g id="mini-step-5" transform="translate(654, 50)">
+      <rect width="190" height="252" rx="12" fill="url(#step-card-grad-zh)" stroke="#232C3E" stroke-width="1"/>
+      <rect width="190" height="3" rx="1.5" fill="#34D399"/>
+
+      <!-- Step Badge -->
+      <rect x="12" y="12" width="52" height="20" rx="5" fill="#122A1E" stroke="#1E523A" stroke-width="1"/>
+      <text x="38" y="26" text-anchor="middle" fill="#34D399" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" font-weight="750">STEP 5</text>
+      
+      <!-- Auto Tag -->
+      <text x="178" y="26" text-anchor="end" fill="#64748B" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" font-weight="700">自动</text>
+
+      <!-- Title -->
+      <text x="12" y="58" fill="#FFFFFF" font-size="19" font-weight="750">直接看结果</text>
+
+      <!-- Big Center Visual Icon -->
+      <g transform="translate(12, 72)">
+        <rect width="166" height="110" rx="10" fill="#0C1D15" stroke="#16422F" stroke-width="1"/>
+        <!-- Sparkle / Check Icon -->
+        <circle cx="83" cy="38" r="22" fill="#0F2B1F" stroke="#1D5C40" stroke-width="1.2"/>
+        <path d="M74 38 L80 44 L92 32" fill="none" stroke="#34D399" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <!-- Done Badge -->
+        <rect x="14" y="72" width="138" height="26" rx="6" fill="#07140E" stroke="#103323" stroke-width="1"/>
+        <text x="83" y="89" text-anchor="middle" fill="#86EFAC" font-size="11" font-weight="750">✨ 结果已就绪</text>
+      </g>
+
+      <!-- 1-Line Explanation -->
+      <text x="12" y="206" fill="#F1F5F9" font-size="12.5" font-weight="600">主 Agent 归纳结论</text>
+      <text x="12" y="224" fill="#94A3B8" font-size="11.5">随时接续下一轮迭代</text>
+    </g>
   </g>
 </svg>

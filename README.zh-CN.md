@@ -27,10 +27,6 @@
 - **复杂任务一键外包与结构化交付**：将耗时的代码分析、Bug 调查、单测编写等任务直接委托给子 Agent，自动获取清晰的 Markdown 交付报告与改动 Diff。
 - **安全透明的官方子 Agent 边界**：严格基于官方无头 CLI 接口委托，不提取敏感凭据，不暴露外部代理网络端口，权限与沙箱边界清晰可控。
 
----
-
-## 运行原理（一览）
-
 <p align="center">
   <img src="assets/readme/flow-eli5-zh-cn.svg" alt="call-agy 一句话流程 — 主 Agent 转发到官方 agy 无头模式，agy 执行后返回 handoff" width="100%">
 </p>

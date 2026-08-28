@@ -27,10 +27,6 @@
 - **Outsource Complex Tasks with Structured Handoffs**: Delegate demanding code exploration, bug investigations, or test writing to Antigravity and receive clean Markdown handoff reports and verified git diffs.
 - **Transparent & Secure Sub-Agent Boundary**: Built strictly on the official headless CLI interface. Never extracts OAuth credentials, never exposes external proxy ports, and respects explicit security boundaries.
 
----
-
-## How It Works (At a Glance)
-
 <p align="center">
   <img src="assets/readme/flow-eli5.svg" alt="How call-agy works in one prompt — host Agent forwards to official agy headless mode, agy executes, returns handoff" width="100%">
 </p>
