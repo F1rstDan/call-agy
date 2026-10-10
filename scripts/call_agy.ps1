@@ -40,10 +40,25 @@ $ExitCode = 1
 try {
     $OutputEncoding = $Utf8NoBom
     [Console]::OutputEncoding = $Utf8NoBom
-    if ($MyInvocation.ExpectingInput) {
-        $input | & $PythonCommand @PythonPrefix $PythonScript @args
-    } else {
-        & $PythonCommand @PythonPrefix $PythonScript @args
+    # Native exit status comes from $LASTEXITCODE. On Windows PowerShell 5.1 an
+    # $ErrorActionPreference of "Stop" promotes the child's stderr to a terminating
+    # NativeCommandError, which aborts this launcher mid-run: $ExitCode keeps its 1
+    # initial value (so success looks like failure) and agy is left running detached
+    # because call_agy.py starts it with CREATE_NEW_PROCESS_GROUP. The wrapper writes
+    # a HEADLESS_PERMISSION_RISK warning to stderr on every dispatch, so under 5.1 any
+    # caller that lets PowerShell read that stderr - the documented & call_agy.ps1
+    # shape - loses everything after the warning. And $PSNativeCommandUseErrorActionPreference
+    # (PS 7.3) does not exist on 5.1, so scope the preference around the child process.
+    $PreviousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        if ($MyInvocation.ExpectingInput) {
+            $input | & $PythonCommand @PythonPrefix $PythonScript @args
+        } else {
+            & $PythonCommand @PythonPrefix $PythonScript @args
+        }
+    } finally {
+        $ErrorActionPreference = $PreviousErrorActionPreference
     }
     $ExitCode = $LASTEXITCODE
 } finally {
