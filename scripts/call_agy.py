@@ -32,6 +32,7 @@ RESULT_EXIT_GRACE_SECONDS = 5.0
 DEFAULT_PROGRESS_REPORT_INTERVAL_SECONDS = 60.0
 PROGRESS_TAIL_CHARS = 20
 MAX_RECEIPT_RESPONSE_CHARS = 64 * 1024
+TRANSCRIPT_TAIL_BYTES = 256 * 1024
 STDERR_RING_LINES = 200
 MIN_AGY_VERSION = (1, 1, 15)
 RUNTIME_STATE_DIR_NAMES = (
@@ -246,6 +247,50 @@ def agy_state_dir(home: pathlib.Path | None = None) -> pathlib.Path:
     return (home or pathlib.Path.home()) / ".gemini" / "antigravity-cli"
 
 
+def model_name(value: Any) -> str:
+    if isinstance(value, str) and value.strip().isprintable():
+        return value.strip()
+    return ""
+
+
+def transcript_model(
+    state_dir: pathlib.Path, conversation_id: str, response_step: int
+) -> str:
+    """Read the model AGY recorded for this turn's final response step."""
+    if not conversation_id or conversation_key(conversation_id) != conversation_id:
+        return ""
+    path = (
+        state_dir / "brain" / conversation_id / ".system_generated" / "logs" / "transcript.jsonl"
+    )
+    try:
+        with path.open("rb") as transcript:
+            size = transcript.seek(0, os.SEEK_END)
+            offset = max(0, size - TRANSCRIPT_TAIL_BYTES)
+            transcript.seek(offset)
+            lines = transcript.read(TRANSCRIPT_TAIL_BYTES).split(b"\n")
+    except OSError:
+        return ""
+
+    # An offset into a long transcript can start partway through a JSON record.
+    if offset:
+        lines = lines[1:]
+    for line in reversed(lines):
+        if not line.strip():
+            continue
+        try:
+            record = json.loads(line)
+        except (ValueError, RecursionError):
+            continue
+        if (
+            isinstance(record, dict)
+            and record.get("type") == "PLANNER_RESPONSE"
+            and record.get("status") == "DONE"
+            and record.get("step_index") == response_step
+        ):
+            return model_name(record.get("model"))
+    return ""
+
+
 def probe_writable_directory(
     path: pathlib.Path,
     *,
@@ -308,11 +353,15 @@ def permission_summary(state_dir: pathlib.Path) -> dict[str, Any]:
     summary["settings_present"] = True
     try:
         data = json.loads(settings_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, ValueError, RecursionError):
+        summary["settings_readable"] = False
+        return summary
+    if not isinstance(data, dict):
         summary["settings_readable"] = False
         return summary
     summary["settings_readable"] = True
-    permissions = data.get("permissions") if isinstance(data, dict) else None
+    summary["configured_model"] = model_name(data.get("model"))
+    permissions = data.get("permissions")
     allow = permissions.get("allow") if isinstance(permissions, dict) else None
     ask = permissions.get("ask") if isinstance(permissions, dict) else None
     deny = permissions.get("deny") if isinstance(permissions, dict) else None
@@ -1059,6 +1108,8 @@ def update_session_metadata(source: Any, metadata: dict[str, str]) -> None:
     for canonical, keys in aliases.items():
         for key in keys:
             value = source.get(key)
+            if canonical == "model":
+                value = model_name(value.get("id") if isinstance(value, dict) else value)
             if value is not None and str(value).strip():
                 metadata[canonical] = str(value)
                 break
@@ -1082,6 +1133,7 @@ class InvocationResult(NamedTuple):
     last_event: str
     timed_out: bool
     post_result_cleanup: bool = False
+    response_step: tuple[str, int] | None = None
 
 
 def invoke_once(
@@ -1107,6 +1159,7 @@ def invoke_once(
     terminal_result: dict[str, Any] | None = None
     saw_tool_step = False
     partial_fragments: list[str] = []
+    response_step: tuple[str, int] | None = None
     last_event = "launching"
     timed_out = threading.Event()
     watchdog_stop = threading.Event()
@@ -1332,6 +1385,13 @@ def invoke_once(
                                 )
                             )
                     if step_type == "agent_response":
+                        step_index = step.get("step_index")
+                        if (
+                            step_state == "DONE"
+                            and type(step_index) is int
+                            and step.get("conversation_id") == conversation_id
+                        ):
+                            response_step = (conversation_id, step_index)
                         delta = step.get("text_delta")
                         if isinstance(delta, str) and delta:
                             partial_fragments.append(delta)
@@ -1450,6 +1510,7 @@ def invoke_once(
         last_event=last_event,
         timed_out=timed_out.is_set(),
         post_result_cleanup=post_result_cleanup,
+        response_step=response_step,
     )
 
 
@@ -1515,10 +1576,11 @@ def write_markdown(
         lines.append(f"- attempts: `{attempts}`")
         for previous_id in previous_conversation_ids or []:
             lines.append(f"- previous_attempt_conversation_id: `{previous_id}`")
-    model = session_metadata.get("model") or args.model
+    model = session_metadata.get("model") or model_name(args.model)
+    model_source = session_metadata.get("model_source") or ("requested" if model else "unavailable")
     effort = session_metadata.get("effort") or args.effort
-    if model:
-        lines.append(f"- model: `{model}`")
+    lines.append(f"- model: `{model or 'unknown'}`")
+    lines.append(f"- model_source: `{model_source}`")
     if effort:
         lines.append(f"- effort: `{effort}`")
     if args.agent:
@@ -1964,6 +2026,18 @@ def run_locked(args: argparse.Namespace) -> int:
             terminal_result["partial_response"] = native_response
         return_code = return_code or 2
 
+    session_metadata = invocation.session_metadata
+    if session_metadata.get("model"):
+        session_metadata["model_source"] = "stream"
+    elif invocation.response_step is not None and invocation.response_step[0] == emitted_conversation_id:
+        model = transcript_model(state_dir, *invocation.response_step)
+        if model:
+            session_metadata.update(model=model, model_source="transcript")
+    if not (session_metadata.get("model") or args.model or args.effort or args.agent):
+        configured_model = permission_info.get("configured_model")
+        if configured_model:
+            session_metadata.update(model=configured_model, model_source="settings")
+
     terminal_result = add_recovery_suggestion(terminal_result, conversation_id)
     if attempt_records:
         attempt_records[-1]["final_wrapper_status"] = str(
@@ -1988,7 +2062,7 @@ def run_locked(args: argparse.Namespace) -> int:
         prompt,
         conversation_id,
         invocation.tool_counts,
-        invocation.session_metadata,
+        session_metadata,
         elapsed,
         args,
         prompt_file_path,

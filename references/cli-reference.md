@@ -77,6 +77,8 @@ agy agents
 
 Never guess a slug or replace an unavailable pinned model without the user's direction.
 
+To check the current model manually, run `agy -p "/model" --output-format json`.
+
 ## Options
 
 | Option | Meaning |
@@ -106,7 +108,17 @@ Task text may be the first positional argument, `--task`, or stdin. It is sent t
 
 ## Handoff
 
-The standard Markdown handoff includes the complete assembled prompt delegated to Antigravity, the final or recovered partial response, effective conversation ID, native and wrapper status, process exit code, explicitly selected model/effort when available, requested agent override, compact tool counts, AGY-reported usage, and elapsed time. Usage and duration counters may be cumulative on resumed conversations; do not add cache reads to totals or infer billing. If the wrapper performs its narrow automatic pre-model retry, it records each attempt boundary and the previous conversation ID.
+The standard Markdown handoff includes the complete assembled prompt delegated to Antigravity, the final or recovered partial response, effective conversation ID, native and wrapper status, process exit code, model and source, effort when available, requested agent override, compact tool counts, AGY-reported usage, and elapsed time. Usage and duration counters may be cumulative on resumed conversations; do not add cache reads to totals or infer billing. If the wrapper performs its narrow automatic pre-model retry, it records each attempt boundary and the previous conversation ID.
+
+`model_source` describes the evidence for `model`. The wrapper uses the first available source below without running a separate model query.
+
+| Source | Meaning |
+|---|---|
+| `stream` | Model metadata returned by AGY for this invocation. |
+| `transcript` | Model AGY recorded for this turn's last completed response step. The wrapper reads at most 256 KiB from the end of the native conversation transcript. |
+| `requested` | Explicit `--model` argument. |
+| `settings` | Saved model preference from the existing preflight read, when no model, effort, or agent override was supplied. |
+| `unavailable` | Model reported as `unknown`. |
 
 Every non-dry run first prints `receipt_path` for a best-effort atomically updated crash/interruption receipt, then prints the final `conversation_id`, `output_path`, `elapsed`, and `status` when finalization completes. It may additionally report `attempts=2`, `prompt_file_path`, `raw_output_path`, or `recovery_conversation_id`. A timeout/incomplete result includes a suggested resume prompt but never starts that extra model turn automatically. Without `--output`, turns from the same conversation share `%TEMP%/call-agy/<conversation-id>/` and use unique `<turn-id>-handoff.md` filenames. Artifacts without a conversation ID remain directly under `%TEMP%/call-agy/`; `conversation_id`, not a temporary file, is the resume handle.
 

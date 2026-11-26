@@ -23,7 +23,7 @@ Use the official local `agy` CLI as a bounded sub-agent. The calling Agent remai
 3. Invoke the OS-native launcher once. Use `--task` for a short request, stdin for a multiline request, and `--file` for priority paths.
 4. On `status=SUCCESS`, read the reported `output_path`, inspect any actual diff, and run host-side verification proportional to risk.
 5. On failure, follow [Permissions and recovery](references/permissions-and-recovery.md): diagnose, make one safe local correction, and retry the same task at most once.
-6. Return the substantive result, verification, limitations, and any known process-artifact paths.
+6. Return the substantive result, verification, limitations, the handoff model and its source when known, and any known process-artifact paths.
 
 ## Fast Path
 
