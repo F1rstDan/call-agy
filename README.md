@@ -22,16 +22,16 @@
 
 ## Key Highlights
 
-- Dispatch `agy` as a specialized sub-agent directly from your daily AI coding environment (e.g., Codex, DeepSeek Harness) without switching workflows or tools, leveraging Antigravity frontier models (Gemini 3.7 Flash, Gemini 3.1 Pro, Claude Opus 4.6).
+- Use Antigravity as a second agent in your usual coding chat, such as Codex or DeepSeek Harness. You can hand it a specific task and keep working in the same conversation.
 - **Zero API Keys & Zero Setup Hassle**: Get started instantly. Simply authenticate once via the official `agy` terminal CLI; no API keys, tokens, or secrets to configure or manage.
-- **Outsource Complex Tasks with Structured Handoffs**: Delegate demanding code exploration, bug investigations, or test writing to Antigravity and receive Markdown handoff reports with the model and its source, plus verified git diffs.
+- **Outsource Complex Tasks with Structured Handoffs**: Delegate demanding code exploration, bug investigations, or test writing to Antigravity. Its Markdown handoff records the result and which model was used. For edits, the calling agent checks the actual changes and tests.
 - **Transparent & Secure Sub-Agent Boundary**: Built strictly on the official headless CLI interface. Never extracts OAuth credentials, never exposes external proxy ports, and respects explicit security boundaries.
 
 <p align="center">
   <img src="assets/readme/flow-eli5.svg" alt="How call-agy works in one prompt — host Agent forwards to official agy headless mode, agy executes, returns handoff" width="100%">
 </p>
 
-*One prompt delegates demanding tasks to the official headless `agy` CLI inside its native sandbox, returning structured Markdown handoffs back to your chat.*
+*Ask for an architecture walkthrough, an independent review, or a focused fix in the chat you already use. Your agent sends the task to `agy` and brings the result back.*
 
 ---
 
@@ -62,7 +62,7 @@ Once installed, simply prompt your host Agent with natural language to delegate 
 > ```text
 > Use $call-agy to investigate and fix this error. Pass tests/test_api.py and relevant source files as priority paths, then run tests to verify the fix.
 > ```
-> *Antigravity independently inspects the failure, applies the fix, runs tests, and delivers a handoff with git diffs.*
+> *Antigravity investigates the failure, applies the fix, and reports its tests. Your agent checks the diff and the results.*
 
 > **Scenario 3: Code Review & Optimization**
 > ```text

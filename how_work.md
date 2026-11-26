@@ -43,18 +43,18 @@
 
 #### POSIX Shell (macOS / Linux)
 ```bash
-sh ./scripts/call_agy.sh "分析当前仓库的核心请求处理流程并进行总结" --workspace .
+sh ./scripts/call_agy.sh "分析当前仓库的核心请求处理流程并进行总结" --workspace . --mode plan --sandbox
 ```
 
 #### Windows PowerShell
 ```powershell
-& ".\scripts\call_agy.ps1" --task "分析当前仓库的核心请求处理流程并进行总结" --workspace .
+& ".\scripts\call_agy.ps1" --task "分析当前仓库的核心请求处理流程并进行总结" --workspace . --mode plan --sandbox
 ```
 > **注意**：请在当前 PowerShell 进程中直接调用启动脚本；嵌套 `powershell -Command` 会增加不必要的引号解析层级。
 
 #### 跨平台 Python 3
 ```bash
-python3 scripts/call_agy.py "分析当前仓库的核心请求处理流程并进行总结" --workspace .
+python3 scripts/call_agy.py "分析当前仓库的核心请求处理流程并进行总结" --workspace . --mode plan --sandbox
 ```
 
 ### 1.3 长提示词与 stdin 传输机制
@@ -88,6 +88,7 @@ status=SUCCESS
 - `receipt_path` 在启动 `agy` 之前即行输出。即使宿主在最终交付生成前异常中断或杀死了 Wrapper，该暂存回执仍可用于恢复中断前的最后事件、部分响应文本与诊断信息，避免任务失败时退化为误导性的“空成功”。
 - 调度 Agent 优先读取 `output_path`；若其缺失则回退读取 `receipt_path`，并在接纳修改前审查实际工作区代码变更。
 - `conversation_id` 是后续接续会话的全局确定性唯一标识。
+- 长任务每分钟写一条状态到 stderr 和回执，给出已等待多久、AGY 最后报告了什么、事件流安静了多久。只有收到明确的 AGY 事件，才能描述它具体在做什么。
 
 ---
 
@@ -110,9 +111,9 @@ sh ./scripts/call_agy.sh \
 
 | 参数 | 说明 |
 | :--- | :--- |
-| `-w, --workspace <path>` | **Wrapper 专用**：设置进程工作目录，并自动授权原生 `agy` 访问（默认：当前目录）。 |
+| `-w, --workspace <path>` | 设置进程的工作目录并传给 `agy`，默认是当前目录。 |
 | `-f, --file <path>` | **Wrapper 专用**：向提示词追加优先级文件路径提示（可重复指定）。 |
-| `--add-dir <path>` | 额外向 Antigravity 授予工作区外部目录的访问权限（可重复指定）。 |
+| `--add-dir <path>` | 把外部目录加入 AGY 的工作区，可重复指定。宿主和 AGY 的权限仍然有效。 |
 | `--conversation <id>` | 恢复指定的 Antigravity 会话 ID。 |
 | `-c, --continue` | 恢复工作区内最近一次活跃的 Antigravity 会话。 |
 | `--model <slug>` | 显式指定模型 Slug（可从 `agy models` 中获取；默认使用 CLI 全局配置）。 |
@@ -120,7 +121,7 @@ sh ./scripts/call_agy.sh \
 | `--agent <name>` | 指定内置或自定义 Agent 身份（可从 `agy agents` 中获取）。 |
 | `--timeout <duration>` | AGY 原生 `--print-timeout` 总上限（默认：`2h`）。 |
 | `--idle-timeout <duration>` | 连续未收到有效 `init`/`step_update` 事件多久后告警（默认：`10m`）。 |
-| `--idle-grace <duration>` | 告警后继续静默多久才终止（默认：`5m`）。 |
+| `--idle-grace <duration>` | 可选。告警后继续静默多久才终止，默认只告警。 |
 | `--wrapper-timeout <duration>` | Wrapper 硬看门狗；默认比 `--timeout` 多 30 秒，必须大于 `--timeout`，并应小于宿主超时。 |
 | `--mode <accept-edits\|plan>` | 执行模式；在明确授权修改代码时请使用 `accept-edits`。 |
 | `--sandbox` | 启用 Antigravity 终端沙箱限制。 |
@@ -129,7 +130,7 @@ sh ./scripts/call_agy.sh \
 | `--raw-output <path>` | 调试专用：捕获原始 NDJSON 事件流。 |
 | `--force` | 允许显式输出路径覆盖已有文件；否则自动选择并报告带唯一后缀的新文件名。 |
 | `--agy-binary <path>` | 覆盖 `agy` 可执行文件路径或名称。 |
-| `--dry-run` | 仅打印命令结构、序列化提示词大小与选定传输方式，不执行任务。 |
+| `--dry-run` | 获取 AGY 版本并打印命令、提示词大小和传输方式，不启动模型任务。 |
 
 ---
 
@@ -142,7 +143,14 @@ sh ./scripts/call_agy.sh \
 - **受信任工作区修改预设**：用户授权在受信任工作区修改代码时，宿主流程首调使用 `--mode accept-edits --sandbox --dangerously-skip-permissions` 自动批准工具调用；`--sandbox` 会约束终端执行，但不能让任意写入变得无害。
 - **只读规划**：分析任务使用 `--mode plan --sandbox`。无头运行中的 shell 命令仍可能需要细粒度规则；提示词会优先要求使用原生只读文件工具，以减少无谓的权限拒绝。
 - **显式工作目录指令**：每次委托都会要求 Antigravity 直接在 `--workspace` 绝对路径下工作，并使用原生文件编辑工具写入内容，避免 Windows 下的长内联 shell 命令。
-- **外部目录边界隔离**：`--file` 仅作为优先级提示，无法越权访问工作区外的文件；如需访问外部模块，必须显式声明 `--add-dir <path>`。
+- **外部目录**。请把任务明确允许访问的文件所在目录用 `--add-dir` 加进来，再用 `--file` 指定要看的文件。如果目录里还有无关的敏感材料，可以由宿主把已授权的只读材料暂存到单独目录。无头模式遇到必须交互审批的操作时，宿主需要协调具体的权限，或说明该文件无法访问。
+
+例如，要让 AGY 只读检查另一目录中的一份需求文档，可以这样调用：
+
+```powershell
+& ".\scripts\call_agy.ps1" --task "读取需求文档并总结验收条件" --workspace . `
+  --mode plan --sandbox --add-dir "D:\shared\specs" --file "D:\shared\specs\requirements.md"
+```
 
 ---
 
@@ -165,7 +173,7 @@ sh ./scripts/call_agy.sh \
 
 - **外部文件边界** ➔ 使用 `--add-dir <path>` 补充目标所在的外部目录。
 - **安全模式下 shell 权限软拒绝** ➔ 配置细粒度 Antigravity 命令规则，或与用户确认是否调整权限。
-- **静默告警** ➔ 观察 stderr 单行进度或本地回执；任何有效流事件都会重新计时，宽限期后仍静默则以 `IDLE_TIMEOUT` 保留部分证据并终止进程树。
+- **静默告警** ➔ 观察 stderr 或回执中的最后一个事件。默认继续等待。只有显式设置了 `--idle-grace`，才会在告警和宽限期后以 `IDLE_TIMEOUT` 终止。总时限仍由 `--timeout` 控制，默认两小时。
 - **总超时中断** ➔ 先读取部分交付与同会话恢复建议；只有额外一轮 Token 成本值得时才显式续接。`--wrapper-timeout` 必须大于 `--timeout`，宿主超时再高于两者。
 - **会话失效** ➔ 移除 `--conversation` 参数重新开启新会话。
 

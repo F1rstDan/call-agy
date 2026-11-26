@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import argparse
 import collections
+import contextlib
 import datetime as dt
+import errno
 import hashlib
 import json
 import os
@@ -23,7 +25,7 @@ import sys
 import tempfile
 import threading
 import time
-from typing import Any, NamedTuple
+from typing import Any, Iterator, NamedTuple
 
 STREAM_INPUT_SAFE_BYTES = 60 * 1024
 DEFAULT_WATCHDOG_GRACE_SECONDS = 30.0
@@ -324,21 +326,17 @@ def probe_writable_directory(
         raise RuntimeError(f"{message} ({exc})") from exc
 
 
-def probe_agy_state(state_dir: pathlib.Path) -> list[str]:
+def probe_agy_state(state_dir: pathlib.Path) -> None:
     """Probe the state root and existing runtime subdirectories used during a turn."""
     probe_writable_directory(state_dir, label="state")
-    probed = [str(state_dir)]
     for name in RUNTIME_STATE_DIR_NAMES:
         child = state_dir / name
         if child.is_dir():
             probe_writable_directory(child, label=f"state/{name}")
-            probed.append(str(child))
-    return probed
 
 
 def permission_summary(state_dir: pathlib.Path) -> dict[str, Any]:
     summary: dict[str, Any] = {
-        "settings_present": False,
         "allow_count": 0,
         "ask_count": 0,
         "deny_count": 0,
@@ -350,37 +348,24 @@ def permission_summary(state_dir: pathlib.Path) -> dict[str, Any]:
     settings_path = state_dir / "settings.json"
     if not settings_path.is_file():
         return summary
-    summary["settings_present"] = True
     try:
         data = json.loads(settings_path.read_text(encoding="utf-8"))
     except (OSError, ValueError, RecursionError):
-        summary["settings_readable"] = False
         return summary
     if not isinstance(data, dict):
-        summary["settings_readable"] = False
         return summary
-    summary["settings_readable"] = True
     summary["configured_model"] = model_name(data.get("model"))
-    permissions = data.get("permissions")
-    allow = permissions.get("allow") if isinstance(permissions, dict) else None
-    ask = permissions.get("ask") if isinstance(permissions, dict) else None
-    deny = permissions.get("deny") if isinstance(permissions, dict) else None
-    allow_rules = [str(rule) for rule in allow] if isinstance(allow, list) else []
-    summary["allow_count"] = len(allow_rules)
-    summary["ask_count"] = len(ask) if isinstance(ask, list) else 0
-    summary["deny_count"] = len(deny) if isinstance(deny, list) else 0
-    summary["command_allow_count"] = sum(
-        1 for rule in allow_rules if rule.strip().lower().startswith("command(")
-    )
-    ask_rules = [str(rule) for rule in ask] if isinstance(ask, list) else []
-    deny_rules = [str(rule) for rule in deny] if isinstance(deny, list) else []
-    summary["command_ask_count"] = sum(
-        1 for rule in ask_rules if rule.strip().lower().startswith("command(")
-    )
-    summary["command_deny_count"] = sum(
-        1 for rule in deny_rules if rule.strip().lower().startswith("command(")
-    )
     summary["tool_permission"] = str(data.get("toolPermission") or "request-review")
+    permissions = data.get("permissions")
+    if isinstance(permissions, dict):
+        for action in ("allow", "ask", "deny"):
+            rules = permissions.get(action)
+            if isinstance(rules, list):
+                summary[f"{action}_count"] = len(rules)
+                summary[f"command_{action}_count"] = sum(
+                    isinstance(rule, str) and rule.strip().lower().startswith("command(")
+                    for rule in rules
+                )
     return summary
 
 
@@ -448,7 +433,7 @@ class RunReceipt:
         mode: str | None,
         watchdog_seconds: float,
         idle_timeout_seconds: float = 600.0,
-        idle_grace_seconds: float = 300.0,
+        idle_grace_seconds: float | None = None,
     ) -> None:
         self.path = path
         self._lock = threading.Lock()
@@ -479,12 +464,9 @@ class RunReceipt:
             self._data.update(changes)
             return self._try_write_locked()
 
-    def record_attempt(self, attempt: int, **details: Any) -> bool:
+    def record_attempt(self, record: dict[str, Any]) -> bool:
         with self._lock:
-            attempts = list(self._data.get("attempts") or [])
-            entry = {"attempt": attempt, **details}
-            attempts.append(entry)
-            self._data["attempts"] = attempts
+            self._data["attempts"].append(dict(record))
             return self._try_write_locked()
 
     def _try_write_locked(self) -> bool:
@@ -494,13 +476,12 @@ class RunReceipt:
             self._write_locked()
             return True
         except OSError as exc:
-            self.available = False
+            # Windows can briefly deny replacement of a receipt that is already open.
+            self.available = getattr(exc, "winerror", None) in {5, 32, 33}
             if not self._warned:
                 self._warned = True
-                eprint(
-                    f"[call-agy] WARNING: receipt updates disabled because {self.path} "
-                    f"is not writable: {exc}"
-                )
+                action = "will retry on the next update" if self.available else "updates disabled"
+                eprint(f"[call-agy] WARNING: receipt write failed for {self.path}; {action}: {exc}")
             return False
 
     def _write_locked(self) -> None:
@@ -510,6 +491,8 @@ class RunReceipt:
             partial = partial[-MAX_RECEIPT_RESPONSE_CHARS:]
             truncated = True
         tools = self._data.get("tool_counts") or {}
+        grace = self._data["idle_grace_seconds"]
+        idle_grace = "disabled" if grace is None else f"{grace:.1f}"
         lines = [
             "# call-agy run receipt",
             "",
@@ -520,13 +503,17 @@ class RunReceipt:
             f"- mode: `{self._data['mode']}`",
             f"- watchdog_seconds: `{self._data['watchdog_seconds']:.1f}`",
             f"- idle_warning_seconds: `{self._data['idle_timeout_seconds']:.1f}`",
-            f"- idle_grace_seconds: `{self._data['idle_grace_seconds']:.1f}`",
+            f"- idle_grace_seconds: `{idle_grace}`",
         ]
         if self._data.get("conversation_id"):
             lines.append(f"- conversation_id: `{self._data['conversation_id']}`")
         lines.append(f"- last_event: `{self._data['last_event']}`")
+        if self._data.get("last_progress"):
+            lines.append(f"- last_progress: {self._data['last_progress']}")
         if self._data.get("agy_version"):
             lines.append(f"- agy_version: `{self._data['agy_version']}`")
+        if self._data.get("automatic_retry"):
+            lines.append("- automatic_retry: `true`")
         if self._data.get("tool_permission"):
             lines.append(f"- observed_tool_permission: `{self._data['tool_permission']}`")
         for key in (
@@ -635,7 +622,7 @@ def build_prompt(
     contract = [
         "",
         f"Workspace: {workspace}",
-        "- For a text-only or connectivity task, reply directly without inspecting files or running tools.",
+        "- For a text-only or connectivity task, reply directly in the requested format without inspecting files or running tools.",
         "- Report changed workspace paths relative to this workspace.",
         "- Treat additional accessible directories as context unless the task explicitly targets one; report an explicit external target by absolute path.",
     ]
@@ -668,8 +655,8 @@ def build_prompt(
             lines.append(f"- {p} ({state})")
         parts.append("\n".join(lines))
     parts.append(
-        "\nAt the end, return a concise handoff covering: outcome, files changed (if any), "
-        "verification performed, and any blockers or remaining risks."
+        "\nFor tasks that require inspection, tools, or file changes, return a concise handoff with "
+        "the outcome, files changed, verification, and remaining risks."
     )
     parts.append(
         "Keep inspection proportional to the task: avoid unbounded recursive enumeration, "
@@ -771,29 +758,6 @@ def select_explicit_output_path(
         f"[call-agy] WARNING: {label} already exists; preserving it and using {candidate}"
     )
     return candidate
-
-
-def output_path_for(
-    args: argparse.Namespace,
-    workspace: pathlib.Path,
-    default_path: pathlib.Path | None,
-) -> pathlib.Path:
-    if args.output:
-        p = resolved_output_path(args.output, workspace)
-    else:
-        if default_path is None:
-            raise RuntimeError("Internal error: default handoff path was not prepared.")
-        p = default_path
-    p.parent.mkdir(parents=True, exist_ok=True)
-    return p
-
-
-def raw_path_for(raw: str | None, workspace: pathlib.Path) -> pathlib.Path | None:
-    if not raw:
-        return None
-    p = resolved_output_path(raw, workspace)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    return p
 
 
 def build_command(args: argparse.Namespace, executable: str) -> list[str]:
@@ -1145,7 +1109,7 @@ def invoke_once(
     append_raw: bool = False,
     watchdog_seconds: float | None = None,
     idle_timeout_seconds: float = 600.0,
-    idle_grace_seconds: float = 300.0,
+    idle_grace_seconds: float | None = None,
     receipt: RunReceipt | None = None,
     attempt: int = 1,
 ) -> InvocationResult:
@@ -1176,12 +1140,14 @@ def invoke_once(
 
     started = time.monotonic()
     last_activity = started
+    last_signal = "none"
 
-    def note_stream_activity() -> None:
-        nonlocal last_activity, idle_warned
+    def note_stream_activity(signal_name: str) -> None:
+        nonlocal last_activity, last_signal, idle_warned
         with activity_lock:
             resumed = idle_warned
             last_activity = time.monotonic()
+            last_signal = signal_name
             idle_warned = False
         watchdog_wakeup.set()
         if resumed:
@@ -1254,15 +1220,19 @@ def invoke_once(
     def watchdog() -> None:
         nonlocal idle_warned
         absolute_deadline = started + watchdog_seconds if watchdog_seconds is not None else None
+        progress_deadline = started + DEFAULT_PROGRESS_REPORT_INTERVAL_SECONDS
         while not watchdog_stop.is_set():
             now = time.monotonic()
             action = ""
             message = ""
-            wait_seconds = 1.0
             with activity_lock:
                 idle_warning_deadline = last_activity + idle_timeout_seconds
-                idle_termination_deadline = idle_warning_deadline + idle_grace_seconds
-                deadlines = [idle_termination_deadline]
+                idle_termination_deadline = (
+                    idle_warning_deadline + idle_grace_seconds if idle_grace_seconds is not None else None
+                )
+                deadlines = [progress_deadline]
+                if idle_termination_deadline is not None:
+                    deadlines.append(idle_termination_deadline)
                 if not idle_warned:
                     deadlines.append(idle_warning_deadline)
                 if absolute_deadline is not None:
@@ -1272,23 +1242,34 @@ def invoke_once(
                 if absolute_deadline is not None and now >= absolute_deadline:
                     action = "TIMEOUT"
                     message = f"Wrapper hard limit expired after {watchdog_seconds:.1f}s."
-                elif now >= idle_termination_deadline:
+                elif idle_termination_deadline is not None and now >= idle_termination_deadline:
                     action = "IDLE_TIMEOUT"
                     message = (
                         "No valid AGY stream activity was received for "
-                        f"{idle_timeout_seconds + idle_grace_seconds:.1f}s "
-                        f"({idle_timeout_seconds:.1f}s idle threshold plus "
-                        f"{idle_grace_seconds:.1f}s grace)."
+                        f"{now - last_activity:.1f}s. The configured idle limit expired."
                     )
                 elif now >= idle_warning_deadline and not idle_warned:
                     idle_warned = True
                     action = "IDLE_WARNING"
+                    message = f"No valid AGY stream activity for {now - last_activity:.1f}s."
+                    if idle_grace_seconds is None:
+                        message += " AGY is still running. Silence alone will not stop it."
+                    else:
+                        message += f" The configured idle grace is {idle_grace_seconds:.1f}s."
+                elif now >= progress_deadline:
+                    action = "PROGRESS"
+                    stamp = dt.datetime.now().astimezone().isoformat(timespec="seconds")
                     message = (
-                        f"No valid AGY stream activity for {idle_timeout_seconds:.1f}s; "
-                        f"waiting {idle_grace_seconds:.1f}s grace before termination."
+                        f"still running at {stamp}, elapsed={now - started:.0f}s, "
+                        f"last stream event={last_signal}, stream silence={now - last_activity:.0f}s"
                     )
-                    wait_seconds = max(0.05, idle_termination_deadline - now)
+                    progress_deadline = now + DEFAULT_PROGRESS_REPORT_INTERVAL_SECONDS
 
+            if action == "PROGRESS":
+                eprint(f"[agy] {message}")
+                if receipt:
+                    receipt.update(last_progress=message)
+                continue
             if action == "IDLE_WARNING":
                 eprint(f"[call-agy] WARNING: {message}")
                 if receipt:
@@ -1343,14 +1324,10 @@ def invoke_once(
             if not isinstance(event, dict):
                 continue
             event_name = str(event.get("event") or "unknown")
-            if (
-                event_name == "init" and isinstance(event.get("init"), dict)
-            ) or (
-                event_name == "step_update" and isinstance(event.get("step_update"), dict)
-            ):
-                note_stream_activity()
             last_event = event_name
             if event.get("event") == "init":
+                if isinstance(event.get("init"), dict):
+                    note_stream_activity("init")
                 conversation_id = str(event.get("conversation_id") or conversation_id)
                 update_session_metadata(event.get("init"), session_metadata)
                 eprint(f"[agy] conversation: {conversation_id or '(pending)'}")
@@ -1369,6 +1346,7 @@ def invoke_once(
                     step_type = str(step.get("step_type") or "unknown")
                     step_state = str(step.get("state") or "unknown")
                     last_event = f"step_update:{step_type}:{step_state}"
+                    note_stream_activity(last_event)
                     if step_type == "tool":
                         saw_tool_step = True
                         tool_name = str(
@@ -1526,13 +1504,12 @@ def write_markdown(
     prompt_file_path: pathlib.Path | None,
     receipt_path: pathlib.Path | None = None,
     watchdog_seconds: float | None = None,
-    attempts: int = 1,
-    previous_conversation_ids: list[str] | None = None,
 ) -> None:
     response = str(result.get("response") or "").rstrip()
     partial_response = str(result.get("partial_response") or "").rstrip()
     status = str(result.get("status") or "UNKNOWN")
     usage = result.get("usage") if isinstance(result.get("usage"), dict) else {}
+    attempt_records = result.get("attempt_records") or []
 
     lines: list[str] = ["# Antigravity handoff", ""]
     if response and status == "SUCCESS":
@@ -1572,10 +1549,11 @@ def write_markdown(
         lines.append(f"- process_exit_code: `{result['process_exit_code']}`")
     if conversation_id:
         lines.append(f"- conversation_id: `{conversation_id}`")
-    if attempts > 1:
-        lines.append(f"- attempts: `{attempts}`")
-        for previous_id in previous_conversation_ids or []:
-            lines.append(f"- previous_attempt_conversation_id: `{previous_id}`")
+    if len(attempt_records) > 1:
+        lines.append(f"- attempts: `{len(attempt_records)}`")
+        for record in attempt_records[:-1]:
+            if record["conversation_id"]:
+                lines.append(f"- previous_attempt_conversation_id: `{record['conversation_id']}`")
     model = session_metadata.get("model") or model_name(args.model)
     model_source = session_metadata.get("model_source") or ("requested" if model else "unavailable")
     effort = session_metadata.get("effort") or args.effort
@@ -1597,7 +1575,7 @@ def write_markdown(
         lines.append(f"- wrapper_watchdog: `{watchdog_seconds:.1f}s`")
     lines.append(f"- agy_total_timeout: `{args.timeout}`")
     lines.append(f"- idle_warning: `{getattr(args, 'idle_timeout', '10m')}`")
-    lines.append(f"- idle_grace: `{getattr(args, 'idle_grace', '5m')}`")
+    lines.append(f"- idle_grace: `{getattr(args, 'idle_grace', None) or 'disabled'}`")
     lines.append(f"- elapsed: `{elapsed:.1f}s`")
     if "duration_seconds" in result:
         lines.append(f"- agy_cumulative_duration_seconds: `{result['duration_seconds']}`")
@@ -1609,12 +1587,9 @@ def write_markdown(
         for name, count in sorted(tool_counts.items()):
             lines.append(f"- `{name}` ×{count}")
 
-    attempt_records = result.get("attempt_records")
-    if isinstance(attempt_records, list) and attempt_records:
+    if attempt_records:
         lines += ["", "## Attempt history", ""]
         for record in attempt_records:
-            if not isinstance(record, dict):
-                continue
             summary = [
                 f"native_status={record.get('native_status', 'UNKNOWN')}",
                 f"exit={record.get('exit_code', '?')}",
@@ -1718,57 +1693,38 @@ def add_recovery_suggestion(result: dict[str, Any], conversation_id: str) -> dic
     return updated
 
 
-def process_is_running(pid: int) -> bool:
-    if pid <= 0:
-        return False
+@contextlib.contextmanager
+def conversation_lock(conversation_id: str | None) -> Iterator[None]:
+    """Hold an OS lock for an explicit resume until the wrapper closes its handle."""
+    if not conversation_id:
+        yield
+        return
+
+    lock_dir = temp_root() / ".locks"
     try:
-        os.kill(pid, 0)
-        return True
-    except OSError:
-        return False
+        lock_dir.mkdir(parents=True, exist_ok=True)
+        handle = (lock_dir / f"{conversation_key(conversation_id)}.lock").open("a+b")
+    except OSError as exc:
+        raise RuntimeError(f"CONVERSATION_LOCK_FAILED: {exc}") from exc
+    # Keep the lock file in place so all contenders lock the same file.
+    with handle:
+        try:
+            if os.name == "nt":
+                import msvcrt
 
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
 
-class ConversationLock:
-    """Prevent concurrent explicit resumes of one AGY conversation."""
-
-    def __init__(self, conversation_id: str | None) -> None:
-        self.path: pathlib.Path | None = None
-        if conversation_id:
-            lock_dir = temp_root() / ".locks"
-            lock_dir.mkdir(parents=True, exist_ok=True)
-            self.path = lock_dir / f"{conversation_key(conversation_id)}.lock"
-
-    def __enter__(self) -> "ConversationLock":
-        if self.path is None:
-            return self
-        for _ in range(2):
-            try:
-                descriptor = os.open(self.path, os.O_WRONLY | os.O_CREAT | os.O_EXCL)
-                with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-                    handle.write(f"{os.getpid()}\n")
-                return self
-            except FileExistsError:
-                try:
-                    owner = int(self.path.read_text(encoding="utf-8").strip())
-                except (OSError, ValueError):
-                    owner = -1
-                if process_is_running(owner):
-                    raise RuntimeError(
-                        "CONVERSATION_BUSY: another call-agy process is already resuming this "
-                        f"conversation (pid={owner})."
-                    )
-                try:
-                    self.path.unlink()
-                except OSError as exc:
-                    raise RuntimeError(f"CONVERSATION_LOCK_FAILED: {exc}") from exc
-        raise RuntimeError("CONVERSATION_LOCK_FAILED: could not acquire conversation lock.")
-
-    def __exit__(self, exc_type: Any, exc: Any, traceback: Any) -> None:
-        if self.path:
-            try:
-                self.path.unlink(missing_ok=True)
-            except OSError:
-                eprint(f"[call-agy] WARNING: could not remove conversation lock {self.path}")
+                fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as exc:
+            if exc.errno in {errno.EACCES, errno.EAGAIN, errno.EWOULDBLOCK}:
+                raise RuntimeError(
+                    "CONVERSATION_BUSY: another call-agy process is already resuming this conversation."
+                ) from exc
+            raise RuntimeError(f"CONVERSATION_LOCK_FAILED: {exc}") from exc
+        yield
 
 
 def run_locked(args: argparse.Namespace) -> int:
@@ -1781,7 +1737,8 @@ def run_locked(args: argparse.Namespace) -> int:
     serialized_prompt_bytes = prompt_event_size(prompt)
     print_timeout_seconds = parse_duration_seconds(args.timeout)
     idle_timeout_seconds = parse_duration_seconds(getattr(args, "idle_timeout", "10m"))
-    idle_grace_seconds = parse_duration_seconds(getattr(args, "idle_grace", "5m"))
+    idle_grace = getattr(args, "idle_grace", None)
+    idle_grace_seconds = parse_duration_seconds(idle_grace) if idle_grace is not None else None
     watchdog_seconds = wrapper_timeout_seconds(args.timeout, args.wrapper_timeout)
     agy_version = verify_agy_version(executable)
 
@@ -1795,33 +1752,30 @@ def run_locked(args: argparse.Namespace) -> int:
         print(f"prompt_transport={transport}")
         print(f"agy_total_timeout_seconds={print_timeout_seconds:.1f}")
         print(f"idle_warning_seconds={idle_timeout_seconds:.1f}")
-        print(f"idle_grace_seconds={idle_grace_seconds:.1f}")
+        idle_grace_display = "disabled" if idle_grace_seconds is None else f"{idle_grace_seconds:.1f}"
+        print(f"idle_grace_seconds={idle_grace_display}")
         print(f"wrapper_watchdog_seconds={watchdog_seconds:.1f}")
         print(f"recommended_host_timeout_seconds={watchdog_seconds + DEFAULT_WATCHDOG_GRACE_SECONDS:.1f}")
         return 0
 
     turn_id = create_turn_id()
     probe_writable_directory(temp_root(), label="temporary artifact", error_code="OUTPUT_UNAVAILABLE")
+    output_path = None
     if args.output:
-        args.output = str(
-            select_explicit_output_path(
-                args.output, workspace, turn_id, force=args.force, label="handoff output"
-            )
+        output_path = select_explicit_output_path(
+            args.output, workspace, turn_id, force=args.force, label="handoff output"
         )
+    raw_path = None
     if args.raw_output:
-        args.raw_output = str(
-            select_explicit_output_path(
-                args.raw_output, workspace, turn_id, force=args.force, label="raw output"
-            )
+        raw_path = select_explicit_output_path(
+            args.raw_output, workspace, turn_id, force=args.force, label="raw output"
         )
-    if args.output and args.raw_output:
-        if os.path.normcase(str(resolved_output_path(args.output, workspace))) == os.path.normcase(
-            str(resolved_output_path(args.raw_output, workspace))
-        ):
-            raise RuntimeError(
-                "OUTPUT_PATH_CONFLICT: --output and --raw-output must use different files."
-            )
-    raw_path = raw_path_for(args.raw_output, workspace)
+    if output_path is not None and raw_path is not None and (
+        os.path.normcase(str(output_path)) == os.path.normcase(str(raw_path))
+    ):
+        raise RuntimeError(
+            "OUTPUT_PATH_CONFLICT: --output and --raw-output must use different files."
+        )
 
     receipt_path = receipt_path_for(turn_id)
     receipt = RunReceipt(
@@ -1837,14 +1791,13 @@ def run_locked(args: argparse.Namespace) -> int:
 
     try:
         state_dir = agy_state_dir()
-        probed_state_paths = probe_agy_state(state_dir)
+        probe_agy_state(state_dir)
         permission_info = permission_summary(state_dir)
         tool_permission = str(permission_info.get("tool_permission") or "request-review")
         receipt.update(
             state="PREFLIGHT_OK",
             last_event="state_write_probe_ok",
             agy_version=agy_version,
-            probed_state_path_count=len(probed_state_paths),
             tool_permission=tool_permission,
             allow_count=permission_info.get("allow_count", 0),
             command_allow_count=permission_info.get("command_allow_count", 0),
@@ -1881,9 +1834,8 @@ def run_locked(args: argparse.Namespace) -> int:
             "process_exit_code": 1,
         }
         default_handoff_path, _ = finalize_artifact_paths(turn_id, "", None)
-        preferred_path = output_path_for(args, workspace, default_handoff_path)
         handoff_path = write_markdown_resilient(
-            preferred_path,
+            output_path or default_handoff_path,
             turn_id,
             terminal_result,
             prompt,
@@ -1923,14 +1875,16 @@ def run_locked(args: argparse.Namespace) -> int:
     sent_prompt_bytes = prompt_event_size(prompt_to_send)
     cmd = build_command(args, executable)
 
-    def invoke_for_run(attempt: int, *, append_raw: bool = False) -> InvocationResult:
+    attempt_records: list[dict[str, Any]] = []
+
+    def invoke_for_run(attempt: int) -> InvocationResult:
         try:
-            return invoke_once(
+            invocation = invoke_once(
                 cmd,
                 workspace,
                 prompt_to_send,
                 raw_path,
-                append_raw=append_raw,
+                append_raw=attempt > 1 and raw_path is not None,
                 watchdog_seconds=watchdog_seconds,
                 idle_timeout_seconds=idle_timeout_seconds,
                 idle_grace_seconds=idle_grace_seconds,
@@ -1944,9 +1898,9 @@ def run_locked(args: argparse.Namespace) -> int:
                     eprint(f"[call-agy] retained prompt file: {retained_prompt}")
             raise
 
-    attempt_records: list[dict[str, Any]] = []
-
-    def record_invocation(attempt: int, invocation: InvocationResult) -> None:
+        invocation = invocation._replace(
+            terminal_result=with_actionable_failure(invocation.terminal_result, invocation.diagnostics)
+        )
         record = {
             "attempt": attempt,
             "conversation_id": invocation.conversation_id,
@@ -1957,15 +1911,10 @@ def run_locked(args: argparse.Namespace) -> int:
             "tool_counts": dict(invocation.tool_counts),
         }
         attempt_records.append(record)
-        receipt.record_attempt(attempt, **{key: value for key, value in record.items() if key != "attempt"})
+        receipt.record_attempt(record)
+        return invocation
 
     invocation = invoke_for_run(1)
-    invocation = invocation._replace(
-        terminal_result=with_actionable_failure(invocation.terminal_result, invocation.diagnostics)
-    )
-    record_invocation(1, invocation)
-    attempts = 1
-    previous_conversation_ids: list[str] = []
     elapsed = invocation.elapsed
 
     if (
@@ -1981,15 +1930,8 @@ def run_locked(args: argparse.Namespace) -> int:
             "[call-agy] transient pre-model error with zero usage and no tool steps; "
             "retrying once with the same task and settings"
         )
-        if invocation.conversation_id:
-            previous_conversation_ids.append(invocation.conversation_id)
-        receipt.update(state="RETRYING", last_event="automatic_retry")
-        invocation = invoke_for_run(2, append_raw=raw_path is not None)
-        invocation = invocation._replace(
-            terminal_result=with_actionable_failure(invocation.terminal_result, invocation.diagnostics)
-        )
-        record_invocation(2, invocation)
-        attempts = 2
+        receipt.update(state="RETRYING", last_event="automatic_retry", automatic_retry=True)
+        invocation = invoke_for_run(2)
         elapsed += invocation.elapsed
 
     return_code = invocation.return_code
@@ -2039,24 +1981,20 @@ def run_locked(args: argparse.Namespace) -> int:
             session_metadata.update(model=configured_model, model_source="settings")
 
     terminal_result = add_recovery_suggestion(terminal_result, conversation_id)
-    if attempt_records:
-        attempt_records[-1]["final_wrapper_status"] = str(
-            terminal_result.get("wrapper_status") or ""
-        )
+    attempt_records[-1]["final_wrapper_status"] = str(terminal_result.get("wrapper_status") or "")
     status = str(terminal_result.get("status") or "UNKNOWN")
     completed_successfully = status == "SUCCESS" and (
         return_code == 0 or invocation.post_result_cleanup
     )
-    default_handoff_path: pathlib.Path | None = None
-    if not args.output or prompt_file_path:
+    if output_path is None or prompt_file_path:
         default_handoff_path, prompt_file_path = finalize_artifact_paths(
             turn_id,
             conversation_id,
             prompt_file_path,
         )
-    preferred_path = output_path_for(args, workspace, default_handoff_path)
+        output_path = output_path or default_handoff_path
     handoff_path = write_markdown_resilient(
-        preferred_path,
+        output_path,
         turn_id,
         terminal_result,
         prompt,
@@ -2068,8 +2006,6 @@ def run_locked(args: argparse.Namespace) -> int:
         prompt_file_path,
         receipt_path,
         watchdog_seconds,
-        attempts,
-        previous_conversation_ids,
     )
 
     receipt_partial = str(terminal_result.get("partial_response") or invocation.partial_response)
@@ -2090,8 +2026,8 @@ def run_locked(args: argparse.Namespace) -> int:
         print(f"raw_output_path={raw_path}")
     if prompt_file_path:
         print(f"prompt_file_path={prompt_file_path}")
-    if attempts > 1:
-        print(f"attempts={attempts}")
+    if len(attempt_records) > 1:
+        print(f"attempts={len(attempt_records)}")
     if terminal_result.get("recovery_conversation_id"):
         print(f"recovery_conversation_id={terminal_result['recovery_conversation_id']}")
     print(f"elapsed={elapsed:.1f}s")
@@ -2117,7 +2053,7 @@ def run(args: argparse.Namespace) -> int:
             "[call-agy] WARNING: --dangerously-skip-permissions auto-approves all agy tool "
             "calls for this run."
         )
-    with ConversationLock(args.conversation):
+    with conversation_lock(None if args.dry_run else args.conversation):
         return run_locked(args)
 
 
@@ -2144,8 +2080,7 @@ def parser() -> argparse.ArgumentParser:
     )
     p.add_argument(
         "--idle-grace",
-        default="5m",
-        help="Terminate if stream silence continues this long after the warning (default: 5m)",
+        help="Optional limit on continued stream silence after the warning (default: disabled)",
     )
     p.add_argument(
         "--wrapper-timeout",

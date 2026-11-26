@@ -22,7 +22,15 @@ agy --print= --input-format stream-json --output-format stream-json
 - macOS/Linux: `sh scripts/call_agy.sh` (works even when the installed file lacks an executable mode bit)
 - Portable: `python3 scripts/call_agy.py`
 
-Use the launcher native to the host OS. Paths in examples are relative to the Skill directory.
+Use the launcher native to the host OS. Paths in examples are relative to the Skill directory. For read-only repository analysis, pass both flags shown here.
+
+```powershell
+& ".\scripts\call_agy.ps1" --task "Review the request flow and cite relevant files" --workspace . --mode plan --sandbox
+```
+
+```sh
+sh ./scripts/call_agy.sh --task "Review the request flow and cite relevant files" --workspace . --mode plan --sandbox
+```
 
 ## Multiline and Large Tasks
 
@@ -37,7 +45,7 @@ Explain the request flow and verify every claim against the code.
 
 Close stdin after sending the complete task. If the host cannot pipe stdin, create a prompt intermediate in the system temporary directory and report its path.
 
-The wrapper measures the final UTF-8 stream-json message. Up to 60 KiB is sent directly by stdin. Above that limit it writes the complete task inside a private `%TEMP%/call-agy/.big-prompt/<turn-id>/` directory, exposes only that turn directory to `agy`, then moves the file beside the handoff in `%TEMP%/call-agy/<conversation-id>/` and removes the empty staging directory.
+The wrapper measures the final UTF-8 stream-json message. Up to 60 KiB is sent directly by stdin. Above that limit it writes the complete task under the system temp directory in `call-agy/.big-prompt/<turn-id>/`, exposes the turn's staging directory to `agy`, then groups the prompt file with the conversation artifacts.
 
 ## Workspace and Priority Paths
 
@@ -65,6 +73,7 @@ sh ./scripts/call_agy.sh \
 ```
 
 Prefer `--conversation <id>` over `--continue`; the latter depends on the most recent workspace conversation and can select the wrong thread.
+Concurrent explicit resumes of one ID fail early with `CONVERSATION_BUSY`. The OS releases the lock when the wrapper exits.
 
 ## Model, Effort, and Agent
 
@@ -93,7 +102,7 @@ To check the current model manually, run `agy -p "/model" --output-format json`.
 | `--agent <name>` | Explicit agent from `agy agents`. |
 | `--timeout <duration>` | Native AGY total print-timeout ceiling; default `2h`. |
 | `--idle-timeout <duration>` | Warn after this long without a valid `init` or `step_update`; default `10m`. |
-| `--idle-grace <duration>` | Terminate if valid stream activity does not resume during this grace; default `5m`. |
+| `--idle-grace <duration>` | Optionally terminate if silence continues for this long after the idle warning. Default is warning only. |
 | `--wrapper-timeout <duration>` | Hard process watchdog; defaults to `--timeout` plus 30 seconds and must be greater than `--timeout`. |
 | `--mode <accept-edits|plan>` | Antigravity execution mode. |
 | `--sandbox` | Enable terminal sandbox restrictions. |
@@ -102,7 +111,7 @@ To check the current model manually, run `agy -p "/model" --output-format json`.
 | `--raw-output <path>` | Optional sensitive raw NDJSON capture for debugging. |
 | `--force` | Allow explicit `--output` or `--raw-output` paths to overwrite existing files. Without it, a unique suffix is selected and reported. |
 | `--agy-binary <path-or-name>` | Override the `agy` executable. |
-| `--dry-run` | Print command shape, serialized prompt size, and transport without running Antigravity. |
+| `--dry-run` | Check `agy --version` and print command shape, prompt size, and transport. Skips the conversation lock, artifacts, and model turn. |
 
 Task text may be the first positional argument, `--task`, or stdin. It is sent to native `agy` through stdin rather than placed on the native command line.
 
@@ -120,8 +129,8 @@ The standard Markdown handoff includes the complete assembled prompt delegated t
 | `settings` | Saved model preference from the existing preflight read, when no model, effort, or agent override was supplied. |
 | `unavailable` | Model reported as `unknown`. |
 
-Every non-dry run first prints `receipt_path` for a best-effort atomically updated crash/interruption receipt, then prints the final `conversation_id`, `output_path`, `elapsed`, and `status` when finalization completes. It may additionally report `attempts=2`, `prompt_file_path`, `raw_output_path`, or `recovery_conversation_id`. A timeout/incomplete result includes a suggested resume prompt but never starts that extra model turn automatically. Without `--output`, turns from the same conversation share `%TEMP%/call-agy/<conversation-id>/` and use unique `<turn-id>-handoff.md` filenames. Artifacts without a conversation ID remain directly under `%TEMP%/call-agy/`; `conversation_id`, not a temporary file, is the resume handle.
+After initial executable and output checks, the wrapper prints `receipt_path` for the interruption receipt. On finalization it prints `output_path`, `elapsed`, `status`, and `conversation_id` if available. Optional fields include `attempts=2`, `prompt_file_path`, `raw_output_path`, and `recovery_conversation_id`. Without `--output`, handoff files have unique turn names under the system temp directory in `call-agy/<conversation-id>/`, or directly in `call-agy/` when no conversation was created. Use the conversation ID for resuming.
 
-The wrapper consumes AGY events continuously. Valid `init` and `step_update` events renew the activity deadline; stderr and malformed output do not. Key progress is emitted as compact stderr lines and persisted in the receipt. Partial-response progress is limited to once per 60 seconds and contains the cumulative character count, timestamp, and a 20-character single-line tail. This is observation for host-Agent judgment, not automatic repetition detection. A valid terminal `result` ends stream consumption; AGY receives 5 seconds to exit before bounded process-tree cleanup.
+Key progress goes to stderr and the receipt. While the process runs, a status line every minute reports elapsed time, the last valid stream event, and time without valid events. Partial-response progress includes the character count, timestamp, and last 20 characters. See [timeout coordination](permissions-and-recovery.md#timeout-coordination) for stream activity and process cleanup.
 
 When explicit `--output` or `--raw-output` already exists, call-agy preserves it and selects a unique suffixed filename. Pass `--force` only when replacement is intentional. The two options must not resolve to the same file. Wrapper-created output files are independent of AGY `--mode plan`; plan governs AGY behavior, not the wrapper's own handoff writes.
